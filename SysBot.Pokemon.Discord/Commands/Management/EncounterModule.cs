@@ -1,14 +1,13 @@
-﻿using Discord.Commands;
-using PKHeX.Core;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-public class EchoModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+public class EchoModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("toss")]
-    [Summary("Makes all bots that are currently waiting for a go-ahead continue operation.")]
+    [SlashCommand("toss", "Makes all bots that are currently waiting for a go-ahead continue operation.")]
     [RequireSudo]
     public async Task TossAsync(string name = "")
     {

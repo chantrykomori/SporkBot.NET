@@ -1,23 +1,21 @@
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using PKHeX.Core;
+using NetUtil = SysBot.Pokemon.Discord.NetUtil;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Queues new Link Code trades")]
-public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("trade-module","Queues new Link Code trades")]
+public class TradeModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
 
-    [Command("tradeList")]
-    [Alias("tl")]
-    [Summary("Prints the users in the trade queues.")]
+    [SlashCommand("trade_queue", "Prints the users in the trade queues.")]
     [RequireSudo]
     public async Task GetTradeListAsync()
     {
@@ -32,21 +30,21 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("trade")]
-    [Alias("t")]
-    [Summary("Makes the bot trade you the provided Pokémon file.")]
+    [SlashCommand("trade", "Makes the bot trade you the provided Pokémon file.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-    public Task TradeAsyncAttach([Summary("Trade Code")] int code)
+    public Task TradeAsyncAttach(
+        [Summary(".pk File")] IAttachment file,
+        [Summary("Trade Code")] int code = 0)
     {
         var sig = Context.User.GetFavor();
-        return TradeAsyncAttach(code, sig, Context.User);
+        return TradeAsyncAttach(code, sig, Context.User, file);
     }
 
-    [Command("trade")]
-    [Alias("t")]
-    [Summary("Makes the bot trade you a Pokémon converted from the provided Showdown Set.")]
+    [SlashCommand("trade_showdown", "Makes the bot trade you a Pokémon converted from the provided Showdown Set.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-    public async Task TradeAsync([Summary("Trade Code")] int code, [Summary("Showdown Set")][Remainder] string content)
+    public async Task TradeAsync(
+        [Summary("Showdown Set")] string content,
+        [Summary("Trade Code")] int code = 0)
     {
         content = ReusableActions.StripCodeBlock(content);
         var set = new ShowdownSet(content);
@@ -59,7 +57,8 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
             {
                 sb.AppendLine("Invalid lines detected:\n```");
                 foreach (var line in set.InvalidLines)
-                    sb.AppendLine(line);
+                    // this may not be the correct thing to pass, but BattleTemplateParseError is incompatible
+                    sb.AppendLine(line.Value);
                 sb.AppendLine("```");
             }
             if (set.Species is 0)
@@ -113,32 +112,12 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         }
     }
 
-    [Command("trade")]
-    [Alias("t")]
-    [Summary("Makes the bot trade you a Pokémon converted from the provided Showdown Set.")]
-    [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-    public Task TradeAsync([Summary("Showdown Set")][Remainder] string content)
-    {
-        var code = Info.GetRandomTradeCode();
-        return TradeAsync(code, content);
-    }
-
-    [Command("trade")]
-    [Alias("t")]
-    [Summary("Makes the bot trade you the attached file.")]
-    [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-    public Task TradeAsyncAttach()
-    {
-        var code = Info.GetRandomTradeCode();
-        return TradeAsyncAttach(code);
-    }
-
-    [Command("banTrade")]
-    [Alias("bt")]
+    // unsure if the summary for this one is correct, since the summary did not exist in the original
+    [SlashCommand("ban_trade", "Bans a user from trading with the bot")]
     [RequireSudo]
-    public async Task BanTradeAsync([Summary("Online ID")] ulong nnid, string comment)
+    public async Task BanTradeAsync([Summary("User ID")] ulong userId, string comment)
     {
-        SysCordSettings.HubConfig.TradeAbuse.BannedIDs.AddIfNew([GetReference(nnid, comment)]);
+        SysCordSettings.HubConfig.TradeAbuse.BannedIDs.AddIfNew([GetReference(userId, comment)]);
         await ReplyAsync("Done.").ConfigureAwait(false);
     }
 
@@ -149,48 +128,30 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         Comment = $"Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
     };
 
-    [Command("tradeUser")]
-    [Alias("tu", "tradeOther")]
-    [Summary("Makes the bot trade the mentioned user the attached file.")]
+    // command logic has been reworked in order to make use of slash command context. users must now be server members in order to use this code, and they are called by user ID which is more easily exposed in the UI.
+    [SlashCommand("trade_user", "Makes the bot trade a server member the attached file.")]
     [RequireSudo]
-    public async Task TradeAsyncAttachUser([Summary("Trade Code")] int code, [Remainder] string _)
+    public async Task TradeAsyncAttachUser(
+        [Summary("User ID")] ulong userId,
+        [Summary(".pk File")]IAttachment file,
+        [Summary("Trade Code")] int code = 0)
     {
-        if (Context.Message.MentionedUsers.Count > 1)
-        {
-            await ReplyAsync("Too many mentions. Queue one user at a time.").ConfigureAwait(false);
-            return;
-        }
-
-        if (Context.Message.MentionedUsers.Count == 0)
-        {
-            await ReplyAsync("A user must be mentioned in order to do this.").ConfigureAwait(false);
-            return;
-        }
-
-        var usr = Context.Message.MentionedUsers.ElementAt(0);
+        // there may be a better way to implement IUser here
+        var usr = Context.Guild.GetUser(userId);
         var sig = usr.GetFavor();
-        await TradeAsyncAttach(code, sig, usr).ConfigureAwait(false);
-    }
-
-    [Command("tradeUser")]
-    [Alias("tu", "tradeOther")]
-    [Summary("Makes the bot trade the mentioned user the attached file.")]
-    [RequireSudo]
-    public Task TradeAsyncAttachUser([Remainder] string _)
-    {
-        var code = Info.GetRandomTradeCode();
-        return TradeAsyncAttachUser(code, _);
-    }
-
-    private async Task TradeAsyncAttach(int code, RequestSignificance sig, SocketUser usr)
-    {
-        var attachment = Context.Message.Attachments.FirstOrDefault();
-        if (attachment == default)
+        if (code == 0)
         {
-            await ReplyAsync("No attachment provided!").ConfigureAwait(false);
-            return;
+            var randomCode = Info.GetRandomTradeCode();
+            await TradeAsyncAttach(randomCode, sig, usr, file).ConfigureAwait(false);
         }
+        else
+        {
+            await TradeAsyncAttach(code, sig, usr, file).ConfigureAwait(false);
+        }
+    }
 
+    private async Task TradeAsyncAttach(int code, RequestSignificance sig, SocketUser usr, IAttachment attachment)
+    {
         var att = await NetUtil.DownloadPKMAsync(attachment).ConfigureAwait(false);
         var pk = GetRequest(att);
         if (pk == null)
@@ -216,19 +177,18 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
 
     private async Task AddTradeToQueueAsync(int code, string trainerName, T pk, RequestSignificance sig, SocketUser usr)
     {
-        if (!pk.CanBeTraded())
-        {
-            // Disallow anything that cannot be traded from the game (e.g. Fusions).
-            await ReplyAsync("Provided Pokémon content is blocked from trading!").ConfigureAwait(false);
-            return;
-        }
-
         var cfg = Info.Hub.Config.Trade;
         var la = new LegalityAnalysis(pk);
         if (!la.Valid)
         {
             // Disallow trading illegal Pokémon.
             await ReplyAsync($"{typeof(T).Name} attachment is not legal, and cannot be traded!").ConfigureAwait(false);
+            return;
+        }
+        if (!pk.CanBeTraded(la.EncounterOriginal))
+        {
+            // Disallow anything that cannot be traded from the game (e.g. Fusions).
+            await ReplyAsync("Provided Pokémon content is blocked from trading!").ConfigureAwait(false);
             return;
         }
         if (cfg.DisallowNonNatives && (la.EncounterOriginal.Context != pk.Context || pk.GO))

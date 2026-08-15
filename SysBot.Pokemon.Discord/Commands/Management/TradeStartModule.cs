@@ -1,15 +1,15 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using PKHeX.Core;
 using SysBot.Base;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
 
-public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+public class TradeStartModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private class TradeStartAction(ulong ChannelId, Action<PokeRoutineExecutorBase, PokeTradeDetail<T>> messager, string channel)
         : ChannelAction<PokeRoutineExecutorBase, PokeTradeDetail<T>>(ChannelId, messager, channel);
@@ -41,8 +41,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         return Channels.TryGetValue(cid, out _);
     }
 
-    [Command("startHere")]
-    [Summary("Makes the bot log trade starts to the channel.")]
+    [SlashCommand("start_here", "Makes the bot log trade starts to the channel.")]
     [RequireSudo]
     public async Task AddLogAsync()
     {
@@ -78,8 +77,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         Channels.Add(cid, entry);
     }
 
-    [Command("startInfo")]
-    [Summary("Dumps the Start Notification settings.")]
+    [SlashCommand("start_info", "Dumps the Start Notification settings.")]
     [RequireSudo]
     public async Task DumpLogInfoAsync()
     {
@@ -87,8 +85,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
             await ReplyAsync($"{c.Key} - {c.Value}").ConfigureAwait(false);
     }
 
-    [Command("startClear")]
-    [Summary("Clears the Start Notification settings in that specific channel.")]
+    [SlashCommand("start_clear", "Clears the Start Notification settings in that specific channel.")]
     [RequireSudo]
     public async Task ClearLogsAsync()
     {
@@ -99,8 +96,7 @@ public class TradeStartModule<T> : ModuleBase<SocketCommandContext> where T : PK
         await ReplyAsync($"Start Notifications cleared from channel: {Context.Channel.Name}").ConfigureAwait(false);
     }
 
-    [Command("startClearAll")]
-    [Summary("Clears all the Start Notification settings.")]
+    [SlashCommand("start_clear_all", "Clears all the Start Notification settings.")]
     [RequireSudo]
     public async Task ClearLogsAllAsync()
     {

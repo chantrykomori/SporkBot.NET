@@ -1,8 +1,8 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon;
 
@@ -59,7 +59,7 @@ public class TradeSettings : IBotStateSettings, ICountSettings
     /// <summary>
     /// Gets a random trade code based on the range settings.
     /// </summary>
-    public int GetRandomTradeCode() => Util.Rand.Next(MinTradeCode, MaxTradeCode + 1);
+    public int GetRandomTradeCode() => PKHeX.Core.Util.Rand.Next(MinTradeCode, MaxTradeCode + 1);
 
     private int _completedSurprise;
     private int _completedDistribution;

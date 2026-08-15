@@ -1,11 +1,11 @@
-using PKHeX.Core;
-using PKHeX.Core.Searching;
-using SysBot.Base;
 using System;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using PKHeX.Core;
+using PKHeX.Core.Searching;
+using SysBot.Base;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.BasePokeDataOffsetsBS;
 
@@ -731,7 +731,7 @@ public class PokeTradeBotBS(PokeTradeHub<PB8> Hub, PokeBotState Config) : PokeRo
         else if (config.LedyQuitIfNoMatch)
         {
             var nickname = offered.IsNicknamed ? $" (Nickname: \"{offered.Nickname}\")" : string.Empty;
-            poke.SendNotification(this, $"No match found for the offered {GameInfo.GetStrings(1).Species[offered.Species]}{nickname}.");
+            poke.SendNotification(this, $"No match found for the offered {GameInfo.GetStrings("eng").Species[offered.Species]}{nickname}.");
             return (toSend, PokeTradeResult.TrainerRequestBad);
         }
 

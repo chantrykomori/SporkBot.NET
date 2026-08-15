@@ -1,6 +1,6 @@
-using PKHeX.Core;
 using System;
 using System.Collections.Generic;
+using PKHeX.Core;
 using System.ComponentModel;
 using System.Linq;
 

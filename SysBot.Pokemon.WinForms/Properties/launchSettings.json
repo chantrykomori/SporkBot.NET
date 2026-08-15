@@ -1,8 +1,8 @@
 {
-  "profiles": {
-    "SysBot.Pokemon.WinForms": {
-      "commandName": "Project",
-      "nativeDebugging": true
+    "profiles": {
+        "SysBot.Pokemon.WinForms": {
+            "commandName": "Project",
+            "nativeDebugging": true
+        }
     }
-  }
 }

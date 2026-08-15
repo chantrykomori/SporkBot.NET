@@ -1,9 +1,12 @@
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 // ms-lpl, removed from their website but archived on the internet, with alterations to be inheritable
 
-namespace System.Collections.Concurrent;
+namespace SysBot.Pokemon;
 
 /// <summary>Provides a thread-safe priority queue data structure.</summary>
 /// <typeparam name="TKey">Specifies the type of keys used to prioritize values.</typeparam>

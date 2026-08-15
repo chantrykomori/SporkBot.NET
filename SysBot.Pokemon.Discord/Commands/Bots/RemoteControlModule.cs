@@ -1,17 +1,16 @@
-using Discord.Commands;
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord.Interactions;
+using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Remotely controls a bot.")]
-public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("remote-control","Remotely controls a bot.")]
+public class RemoteControlModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("click")]
-    [Summary("Clicks the specified button.")]
+    [SlashCommand("click", "Clicks the specified button.")]
     [RequireRoleAccess(nameof(DiscordManager.RolesRemoteControl))]
     public async Task ClickAsync(SwitchButton b)
     {
@@ -25,8 +24,7 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         await ClickAsyncImpl(b, bot).ConfigureAwait(false);
     }
 
-    [Command("click")]
-    [Summary("Clicks the specified button.")]
+    [SlashCommand("click", "Clicks the specified button.")]
     [RequireSudo]
     public async Task ClickAsync(string ip, SwitchButton b)
     {
@@ -40,8 +38,7 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         await ClickAsyncImpl(b, bot).ConfigureAwait(false);
     }
 
-    [Command("setStick")]
-    [Summary("Sets the stick to the specified position.")]
+    [SlashCommand("set_stick", "Sets the stick to the specified position.")]
     [RequireRoleAccess(nameof(DiscordManager.RolesRemoteControl))]
     public async Task SetStickAsync(SwitchStick s, short x, short y, ushort ms = 1_000)
     {
@@ -55,8 +52,7 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         await SetStickAsyncImpl(s, x, y, ms, bot).ConfigureAwait(false);
     }
 
-    [Command("setStick")]
-    [Summary("Sets the stick to the specified position.")]
+    [SlashCommand("set_stick", "Sets the stick to the specified position.")]
     [RequireSudo]
     public async Task SetStickAsync(string ip, SwitchStick s, short x, short y, ushort ms = 1_000)
     {
@@ -70,20 +66,16 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         await SetStickAsyncImpl(s, x, y, ms, bot).ConfigureAwait(false);
     }
 
-    [Command("setScreenOn")]
-    [Alias("screenOn", "scrOn")]
-    [Summary("Turns the screen on")]
+    [SlashCommand("set_screen_on", "Turns the screen on")]
     [RequireSudo]
-    public Task SetScreenOnAsync([Remainder] string ip)
+    public Task SetScreenOnAsync(string ip)
     {
         return SetScreen(true, ip);
     }
 
-    [Command("setScreenOff")]
-    [Alias("screenOff", "scrOff")]
-    [Summary("Turns the screen off")]
+    [SlashCommand("set_screen_off", "Turns the screen off")]
     [RequireSudo]
-    public Task SetScreenOffAsync([Remainder] string ip)
+    public Task SetScreenOffAsync(string ip)
     {
         return SetScreen(false, ip);
     }

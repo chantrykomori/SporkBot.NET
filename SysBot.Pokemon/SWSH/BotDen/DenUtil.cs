@@ -1,11 +1,11 @@
-using PKHeX.Core;
-using System.IO;
-using System.Reflection;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using FlatbuffersResource;
 using Google.FlatBuffers;
-using System;
-using System.Linq;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon;
 

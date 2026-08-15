@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
-using System;
-using System.Linq;
 using System.Diagnostics;
+using System.Data.SQLite;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Data.SQLite;
 
 namespace SysBot.Pokemon;
 

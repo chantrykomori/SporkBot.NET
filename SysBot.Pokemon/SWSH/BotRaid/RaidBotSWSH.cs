@@ -1,8 +1,8 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using PKHeX.Core;
+using SysBot.Base;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
@@ -253,7 +253,7 @@ public class RaidBotSWSH(PokeBotState Config, PokeTradeHub<PK8> Hub) : PokeRouti
                 await DeleteFriend(token).ConfigureAwait(false);
         }
 
-        // If we're deleting friends and need to add friends, it's cleaner to back out 
+        // If we're deleting friends and need to add friends, it's cleaner to back out
         // to Home and re-open the profile in case we ran out of friends to delete.
         if (deleteFriends && addFriends)
         {

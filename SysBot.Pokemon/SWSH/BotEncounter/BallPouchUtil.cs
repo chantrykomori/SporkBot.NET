@@ -15,9 +15,17 @@ public class BallPouchUtil
         851,
     ];
 
+    // old param order
+    // type, info, maxCount, offset, size
+
     private static InventoryPouch8 GetBallPouch(byte[] ballBlock)
     {
-        var pouch = new InventoryPouch8(InventoryType.Balls, ItemStorage8SWSH.Instance, 999, 0, 28);
+        var pouch = new InventoryPouch8(
+            0,
+            28,
+            999,
+            ItemStorage8SWSH.Instance,
+            InventoryType.Balls);
         pouch.GetPouch(ballBlock);
         return pouch;
     }

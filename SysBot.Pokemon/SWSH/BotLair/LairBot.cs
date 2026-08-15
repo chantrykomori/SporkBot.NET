@@ -1,11 +1,11 @@
 using System;
-using PKHeX.Core;
-using SysBot.Base;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
-using System.Globalization;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using PKHeX.Core;
+using SysBot.Base;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
@@ -600,7 +600,11 @@ public sealed class LairBotSWSH : EncounterBotSWSH
     private async Task<int> GetDyniteCount(CancellationToken token)
     {
         OtherItemsPouch = await Connection.ReadBytesAsync(OtherItemAddress, 2184, token).ConfigureAwait(false);
-        var pouch = new InventoryPouch8(InventoryType.Items, ItemStorage8SWSH.Instance, 999, 0, 546);
+        var pouch = new InventoryPouch8(0,
+            546,
+            999,
+            ItemStorage8SWSH.Instance,
+            InventoryType.Items);
         pouch.GetPouch(OtherItemsPouch);
         return pouch.Items.FirstOrDefault(x => x.Index == 1604)!.Count;
     }
@@ -624,7 +628,7 @@ public sealed class LairBotSWSH : EncounterBotSWSH
             int ball = BitConverter.ToInt32(await SwitchConnection.ReadBytesAbsoluteAsync(ofs, 4, token).ConfigureAwait(false), 0);
             if (ball == index)
                 break;
-            if (lairBall.IsApricornBall())
+            if (lairBall.IsApricornBall)
                 await Click(DLEFT, 0_050, token).ConfigureAwait(false);
             else await Click(DRIGHT, 0_050, token).ConfigureAwait(false);
         }

@@ -1,49 +1,29 @@
-using Discord;
-using Discord.Commands;
-using PKHeX.Core;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Queues new Dump trades")]
-public class DumpModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("dump", "Queues new Dump trades")]
+public class DumpModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
 
-    [Command("dump")]
-    [Alias("d")]
-    [Summary("Dumps the Pokémon you show via Link Trade.")]
+    [SlashCommand("dump", "Dumps the Pokémon you show via Link Trade.")]
     [RequireQueueRole(nameof(DiscordManager.RolesDump))]
-    public Task DumpAsync(int code)
+    public Task DumpAsync(int code = 0)
     {
+        if (code == 0)
+        {
+            var randomTradeCode = Info.GetRandomTradeCode();
+            return DumpAsync(randomTradeCode);
+        }
         var sig = Context.User.GetFavor();
         return QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.Dump, PokeTradeType.Dump);
     }
 
-    [Command("dump")]
-    [Alias("d")]
-    [Summary("Dumps the Pokémon you show via Link Trade.")]
-    [RequireQueueRole(nameof(DiscordManager.RolesDump))]
-    public Task DumpAsync([Summary("Trade Code")][Remainder] string code)
-    {
-        int tradeCode = Util.ToInt32(code);
-        var sig = Context.User.GetFavor();
-        return QueueHelper<T>.AddToQueueAsync(Context, tradeCode == 0 ? Info.GetRandomTradeCode() : tradeCode, Context.User.Username, sig, new T(), PokeRoutineType.Dump, PokeTradeType.Dump);
-    }
-
-    [Command("dump")]
-    [Alias("d")]
-    [Summary("Dumps the Pokémon you show via Link Trade.")]
-    [RequireQueueRole(nameof(DiscordManager.RolesDump))]
-    public Task DumpAsync()
-    {
-        var code = Info.GetRandomTradeCode();
-        return DumpAsync(code);
-    }
-
-    [Command("dumpList")]
-    [Alias("dl", "dq")]
-    [Summary("Prints the users in the Dump queue.")]
+    [SlashCommand("dump_queue_list", "Prints the users in the Dump queue.")]
     [RequireSudo]
     public async Task GetListAsync()
     {

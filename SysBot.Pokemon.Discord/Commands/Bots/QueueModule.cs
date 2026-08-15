@@ -1,36 +1,31 @@
-using Discord;
-using Discord.Commands;
-using PKHeX.Core;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Clears and toggles Queue features.")]
-public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("queue_module", "Clears and toggles Queue features.")]
+public class QueueModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
 
-    [Command("queueStatus")]
-    [Alias("qs", "ts")]
-    [Summary("Checks the user's position in the queue.")]
+    [SlashCommand("queue_status", "Checks the user's position in the queue.")]
     public async Task GetTradePositionAsync()
     {
         var msg = Context.User.Mention + " - " + Info.GetPositionString(Context.User.Id);
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("queueClear")]
-    [Alias("qc", "tc")]
-    [Summary("Clears the user from the trade queues. Will not remove a user if they are being processed.")]
+    [SlashCommand("queue_clear", "Clears the user from the trade queues. Will not remove a user if they are being processed.")]
     public async Task ClearTradeAsync()
     {
         string msg = ClearTrade();
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("queueClearUser")]
-    [Alias("qcu", "tcu")]
-    [Summary("Clears the user from the trade queues. Will not remove a user if they are being processed.")]
+    // moving this to require ID number until i learn if the interaction framework supports overloading
+    [SlashCommand("queue_clear_other_user", "Clears another user from the trade queues. Will not remove a user if they are being processed.")]
     [RequireSudo]
     public async Task ClearTradeUserAsync([Summary("Discord user ID")] ulong id)
     {
@@ -38,38 +33,7 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("queueClearUser")]
-    [Alias("qcu", "tcu")]
-    [Summary("Clears the user from the trade queues. Will not remove a user if they are being processed.")]
-    [RequireSudo]
-    public async Task ClearTradeUserAsync([Summary("Username of the person to clear")] string _)
-    {
-        foreach (var user in Context.Message.MentionedUsers)
-        {
-            string msg = ClearTrade(user.Id);
-            await ReplyAsync(msg).ConfigureAwait(false);
-        }
-    }
-
-    [Command("queueClearUser")]
-    [Alias("qcu", "tcu")]
-    [Summary("Clears the user from the trade queues. Will not remove a user if they are being processed.")]
-    [RequireSudo]
-    public async Task ClearTradeUserAsync()
-    {
-        var users = Context.Message.MentionedUsers;
-        if (users.Count == 0)
-        {
-            await ReplyAsync("No users mentioned").ConfigureAwait(false);
-            return;
-        }
-        foreach (var u in users)
-            await ClearTradeUserAsync(u.Id).ConfigureAwait(false);
-    }
-
-    [Command("queueClearAll")]
-    [Alias("qca", "tca")]
-    [Summary("Clears all users from the trade queues.")]
+    [SlashCommand("queue_clear_all", "Clears all users from the trade queues.")]
     [RequireSudo]
     public async Task ClearAllTradesAsync()
     {
@@ -77,9 +41,7 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         await ReplyAsync("Cleared all in the queue.").ConfigureAwait(false);
     }
 
-    [Command("queueToggle")]
-    [Alias("qt", "tt")]
-    [Summary("Toggles on/off the ability to join the trade queue.")]
+    [SlashCommand("queue_toggle", "Toggles on/off the ability to join the trade queue.")]
     [RequireSudo]
     public Task ToggleQueueTradeAsync()
     {
@@ -91,9 +53,7 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         return Context.Channel.EchoAndReply(msg);
     }
 
-    [Command("queueMode")]
-    [Alias("qm")]
-    [Summary("Changes how queueing is controlled (manual/threshold/interval).")]
+    [SlashCommand("queue_mode", "Changes how queueing is controlled (manual/threshold/interval).")]
     [RequireSudo]
     public async Task ChangeQueueModeAsync([Summary("Queue mode")] QueueOpening mode)
     {
@@ -101,9 +61,7 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         await ReplyAsync($"Changed queue mode to {mode}.").ConfigureAwait(false);
     }
 
-    [Command("queueList")]
-    [Alias("ql")]
-    [Summary("Private messages the list of users in the queue.")]
+    [SlashCommand("queue_user_list", "Private messages the list of users in the queue.")]
     [RequireSudo]
     public async Task ListUserQueue()
     {
@@ -120,12 +78,6 @@ public class QueueModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         var userID = Context.User.Id;
         return ClearTrade(userID);
     }
-
-    //private static string ClearTrade(string username)
-    //{
-    //    var result = Info.ClearTrade(username);
-    //    return GetClearTradeMessage(result);
-    //}
 
     private static string ClearTrade(ulong userID)
     {

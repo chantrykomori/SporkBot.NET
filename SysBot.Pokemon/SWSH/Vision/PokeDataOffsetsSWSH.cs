@@ -29,7 +29,7 @@ public class PokeDataOffsetsSWSH
     public const uint IngredientPouchOffset = 0x45068B00;// 100 bytes
 
     // Raid Offsets
-    // The dex number of the Pokémon the host currently has chosen. 
+    // The dex number of the Pokémon the host currently has chosen.
     // Details for each player span 0x30, so add 0x30 to get to the next offset.
     public const uint RaidP0PokemonOffset = 0x8398A294;
     // Add to each Pokémon offset.  AltForm used.

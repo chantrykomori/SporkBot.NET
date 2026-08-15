@@ -228,16 +228,16 @@ public class EtumrepUtil
         }
     }
 
-    private static async Task Authenticate(EtumrepUser user, EtumrepServer server)
+    private static async Task Authenticate(EtumrepUser user, EtumrepDumpSettings.EtumrepServer server)
     {
         var auth = new UserAuth()
         {
             HostID = SysCord<PA8>.App.Owner.Id,
             HostName = $"{SysCord<PA8>.App.Owner.Username}#{SysCord<PA8>.App.Owner.Discriminator}",
-            HostPassword = EtumrepServer.LimitInputLength(server.Password, false),
+            HostPassword = EtumrepDumpSettings.EtumrepServer.LimitInputLength(server.Password, false),
             SeedCheckerID = user.SeedCheckerID,
-            SeedCheckerName = EtumrepServer.LimitInputLength(user.SeedCheckerName, true),
-            Token = EtumrepServer.LimitInputLength(server.Token, false),
+            SeedCheckerName = EtumrepDumpSettings.EtumrepServer.LimitInputLength(user.SeedCheckerName, true),
+            Token = EtumrepDumpSettings.EtumrepServer.LimitInputLength(server.Token, false),
         };
 
         try

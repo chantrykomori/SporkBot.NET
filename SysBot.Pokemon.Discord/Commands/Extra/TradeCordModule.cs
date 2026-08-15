@@ -1,25 +1,25 @@
-using PKHeX.Core;
-using Discord;
-using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Discord;
+using Discord.Commands;
+using Discord.Interactions;
+using PKHeX.Core;
+using NetUtil = SysBot.Pokemon.Discord.NetUtil;
 
-namespace SysBot.Pokemon.Discord;
+namespace SysBot.Pokemon.Discord.Commands.Extra;
 
-[Summary("Generates and queues various silly trade additions")]
-public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[global::Discord.Interactions.Group("tradecord", "Generates and queues various silly trade additions")]
+public class TradeCordModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
     private readonly PokeTradeHub<T> Hub = SysCord<T>.Runner.Hub;
     private readonly ExtraCommandUtil<T> Util = new();
     private readonly TradeCordHelper<T> Helper = new(SysCord<T>.Runner.Hub.Config.TradeCord);
 
-    [Command("TradeCordList")]
-    [Alias("tcl", "tcq")]
-    [Summary("Prints users in the TradeCord queue.")]
+    [SlashCommand("tradecord_list", "Prints users in the TradeCord queue.")]
     [RequireSudo]
     public async Task GetTradeCordListAsync()
     {
@@ -34,9 +34,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("TradeCordVote")]
-    [Alias("v", "vote")]
-    [Summary("Vote for an event from a randomly selected list.")]
+    [SlashCommand("tradecord_vote", "Vote for an event from a randomly selected list.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task EventVote()
     {
@@ -119,9 +117,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         }
     }
 
-    [Command("TradeCordCatch")]
-    [Alias("k", "catch")]
-    [Summary("Catch a random Pokémon.")]
+    [SlashCommand("tradecord_catch", "Catch a random Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TradeCord()
     {
@@ -175,8 +171,10 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
                 if (!la.Valid)
                 {
                     await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
-                    var path = Path.Combine(folder, PKHeX.Core.Util.CleanFileName(result.Poke.FileName));
-                    File.WriteAllBytes(path, result.Poke.DecryptedPartyData);
+                    var path = Path.Combine(folder, PathUtil.CleanFileName(result.Poke.FileName));
+                    byte[] buffer = [];
+                    result.Poke.WriteDecryptedDataParty(buffer);
+                    File.WriteAllBytes(path, buffer);
                     return;
                 }
             }
@@ -187,8 +185,10 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
                 if (!la.Valid)
                 {
                     await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
-                    var path = Path.Combine(folder, PKHeX.Core.Util.CleanFileName(result.EggPoke.FileName));
-                    File.WriteAllBytes(path, result.EggPoke.DecryptedPartyData);
+                    var path = Path.Combine(folder, PathUtil.CleanFileName(result.EggPoke.FileName));
+                    byte[] buffer = [];
+                    result.Poke.WriteDecryptedDataParty(buffer);
+                    File.WriteAllBytes(path, buffer);
                     return;
                 }
             }
@@ -267,11 +267,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, result.EmbedName, result.Message, embed).ConfigureAwait(false);
     }
 
-    [Command("TradeCord")]
-    [Alias("tc")]
-    [Summary("Trade a caught Pokémon.")]
+    [SlashCommand("tradecord", "Trade a caught Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeForTradeCord([Summary("Trade Code")] int code, [Summary("Numerical catch ID")] string id)
+    public async Task TradeForTradeCord([global::Discord.Interactions.Summary("Trade Code")] int code, [global::Discord.Interactions.Summary("Numerical catch ID")] string id)
     {
         string name = $"{Context.User.Username}'s Trade";
         var sig = Context.User.GetFavor();
@@ -298,21 +296,18 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, result.Poke, PokeRoutineType.TradeCord, PokeTradeType.TradeCord, result.PokeID).ConfigureAwait(false);
     }
 
-    [Command("TradeCord")]
-    [Alias("tc")]
-    [Summary("Trade a caught Pokémon.")]
+    [SlashCommand("tradecord", "Trade a caught Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeForTradeCord([Summary("Numerical catch ID")] string id)
+    public async Task TradeForTradeCord([global::Discord.Interactions.Summary("Numerical catch ID")] string id)
     {
         var code = Info.GetRandomTradeCode();
         await TradeForTradeCord(code, id).ConfigureAwait(false);
     }
 
-    [Command("TradeCordCatchList")]
-    [Alias("l", "list")]
-    [Summary("List user's Pokémon.")]
+    [SlashCommand("tradecord_catch_list", "List user's Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task PokeList([Summary("Species name of a Pokémon")][Remainder] string content)
+    public async Task PokeList(
+        [global::Discord.Interactions.Summary("name","Species name of a Pokémon")] string content)
     {
         string name = $"{Context.User.Username}'s List";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -331,11 +326,10 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.ListUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordInfo")]
-    [Alias("i", "info")]
-    [Summary("Displays details for a user's Pokémon.")]
+    [SlashCommand("tradecord_info", "Displays details for a user's Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeCordInfo([Summary("Numerical catch ID")] string id)
+    public async Task TradeCordInfo(
+        [global::Discord.Interactions.Summary("id", "Numerical catch ID")] string id)
     {
         string name = $"{Context.User.Username}'s Pokémon Info";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -362,11 +356,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, result.EmbedName, msg, embed).ConfigureAwait(false);
     }
 
-    [Command("TradeCordMassRelease")]
-    [Alias("mr", "massrelease")]
-    [Summary("Mass releases every non-shiny and non-Ditto Pokémon or specific species if specified.")]
+    [SlashCommand("tradecord_mass_release", "Mass releases every non-shiny and non-Ditto Pokémon or specific species if specified.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task MassRelease([Remainder] string species = "")
+    public async Task MassRelease([global::Discord.Interactions.Summary("species", "All species to release, separated by commas")]string species = "")
     {
         string name = $"{Context.User.Username}'s Mass Release";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -380,11 +372,10 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordRelease")]
-    [Alias("r", "release")]
-    [Summary("Releases a user's specific Pokémon.")]
+    [SlashCommand("tradecord_release", "Releases a user's specific Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task Release([Summary("Numerical catch ID")] string id)
+    public async Task Release(
+        [global::Discord.Interactions.Summary("catchId","Numerical catch ID")] string id)
     {
         string name = $"{Context.User.Username}'s Release";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -398,9 +389,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDaycare")]
-    [Alias("dc")]
-    [Summary("Check what's inside the daycare.")]
+    [SlashCommand("tradecord_daycare_check", "Check what's inside the daycare.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task DaycareInfo()
     {
@@ -416,11 +405,12 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDaycare")]
-    [Alias("dc")]
-    [Summary("Adds (or removes) Pokémon to (from) daycare.")]
+    // not sure these should be in one command; might split these up
+    [SlashCommand("tradecord_daycare_change", "Adds (or removes) Pokémon to (from) daycare.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task Daycare([Summary("Action to do (withdraw, deposit)")] string action, [Summary("Catch ID or elaborate action (\"All\" if withdrawing")] string id)
+    public async Task Daycare(
+        [global::Discord.Interactions.Summary("Action to do (withdraw, deposit)")] string action,
+        [global::Discord.Interactions.Summary("Catch ID or elaborate action (\"All\" if withdrawing")] string id)
     {
         string name = $"{Context.User.Username}'s Daycare";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -439,11 +429,11 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordGift")]
-    [Alias("gift", "g")]
-    [Summary("Gifts a Pokémon to a mentioned user.")]
+    [SlashCommand("tradecord_gift", "Gifts a Pokémon to a mentioned user.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task Gift([Summary("Numerical catch ID")] string id, [Summary("User mention")] string _)
+    public async Task Gift(
+        [global::Discord.Interactions.Summary("catch_id", "Numerical catch ID")] string id,
+        [global::Discord.Interactions.Summary("user_id", "Discord User ID")] ulong userId)
     {
         var embed = new EmbedBuilder { Color = Util.GetBorderColor(true) };
         string name = $"{Context.User.Username}'s Gift";
@@ -479,9 +469,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message, embed).ConfigureAwait(false);
     }
 
-    [Command("TradeCordTrainerInfoSet")]
-    [Alias("tis")]
-    [Summary("Sets individual trainer info for caught Pokémon.")]
+    [SlashCommand("tradecord_trainer_set_info", "Sets individual trainer info for caught Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TrainerInfoSet()
     {
@@ -528,9 +516,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordTrainerInfo")]
-    [Alias("ti")]
-    [Summary("Displays currently set trainer info.")]
+    [SlashCommand("tradecord_trainer_info", "Displays currently set trainer info.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TrainerInfo()
     {
@@ -546,9 +532,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordFavorites")]
-    [Alias("fav")]
-    [Summary("Display favorites list.")]
+    [SlashCommand("tradecord_favorites", "Display favorites list.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TradeCordFavorites()
     {
@@ -569,11 +553,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.ListUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordFavorites")]
-    [Alias("fav")]
-    [Summary("Add/Remove a Pokémon to a favorites list.")]
+    [SlashCommand("tradecord_favorites_edit", "Add/Remove a Pokémon to a favorites list.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeCordFavorites([Summary("Catch ID")] string id)
+    public async Task TradeCordFavorites([global::Discord.Interactions.Summary("Catch ID")] string id)
     {
         var name = $"{Context.User.Username}'s Favorite";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -592,11 +574,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDex")]
-    [Alias("dex")]
-    [Summary("Show missing dex entries, dex stats, boosted species.")]
+    [SlashCommand("tradecord_dex", "Show missing dex entries, dex stats, boosted species.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeCordDex([Summary("Optional parameter \"missing\" for missing entries.")] string input = "")
+    public async Task TradeCordDex([global::Discord.Interactions.Summary("Optional parameter \"missing\" for missing entries.")] string input = "")
     {
         var embed = new EmbedBuilder { Color = Util.GetBorderColor(false) };
         input = input.ToLower();
@@ -627,11 +607,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message, embed).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDexPerks")]
-    [Alias("dexperks", "perks")]
-    [Summary("Display and use available Dex completion perks.")]
+    [SlashCommand("tradecord_dex_perks", "Display and use available Dex completion perks.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeCordDexPerks([Summary("Optional perk name and amount to add, or \"clear\" to remove all perks.")][Remainder] string input = "")
+    public async Task TradeCordDexPerks([global::Discord.Interactions.Summary("Optional perk name and amount to add, or \"clear\" to remove all perks.")][Remainder] string input = "")
     {
         var embed = new EmbedBuilder { Color = Util.GetBorderColor(false) };
         string name = $"{Context.User.Username}'s Perks";
@@ -651,9 +629,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message, embed).ConfigureAwait(false);
     }
 
-    [Command("TradeCordSpeciesBoost")]
-    [Alias("boost", "b")]
-    [Summary("If set as an active perk, enter Pokémon species to boost appearance of.")]
+    [SlashCommand("tradecord_species_boost", "If set as an active perk, enter Pokémon species to boost appearance of.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TradeCordSpeciesBoost([Remainder] string input)
     {
@@ -669,9 +645,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordBuddy")]
-    [Alias("buddy")]
-    [Summary("View buddy or set a specified Pokémon as one.")]
+    [SlashCommand("tradecord_buddy", "View buddy or set a specified Pokémon as one.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TradeCordBuddy([Remainder] string input = "")
     {
@@ -739,9 +713,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Context.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("TradeCordNickname")]
-    [Alias("nickname", "nick")]
-    [Summary("Sets a nickname for the active buddy.")]
+    [SlashCommand("tradecord_nickname", "Sets a nickname for the active buddy.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TradeCordNickname([Remainder] string input)
     {
@@ -770,11 +742,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordEvolution")]
-    [Alias("evolve", "evo")]
-    [Summary("Evolves the active buddy, if applicable.")]
+    [SlashCommand("tradecord_evolution", "Evolves the active buddy, if applicable.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task TradeCordEvolution([Remainder][Summary("Usable item or Alcremie form.")] string input = "")
+    public async Task TradeCordEvolution([Remainder][global::Discord.Interactions.Summary("Usable item or Alcremie form.")] string input = "")
     {
         string name = $"{Context.User.Username}'s Evolution";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -808,11 +778,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Context.Channel.SendMessageAsync(null, false, embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("TradeCordGiveItem")]
-    [Alias("giveitem")]
-    [Summary("Gives an item for your buddy to hold.")]
+    [SlashCommand("tradecord_give_item", "Gives an item for your buddy to hold.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task GiveItem([Remainder][Summary("Item name")] string input)
+    public async Task GiveItem([Remainder][global::Discord.Interactions.Summary("Item name")] string input)
     {
         string name = $"{Context.User.Username}'s Give Item";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -835,11 +803,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordGiftItem")]
-    [Alias("giftitem")]
-    [Summary("Gifts an item to the mentioned user.")]
+    [SlashCommand("tradecord_gift_item", "Gifts an item to the mentioned user.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task GiftItem([Remainder][Summary("Item name")] string input)
+    public async Task GiftItem([Remainder][global::Discord.Interactions.Summary("Item name")] string input)
     {
         string name = $"{Context.User.Username}'s Gift Item";
         var embed = new EmbedBuilder { Color = Util.GetBorderColor(true) };
@@ -893,9 +859,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordTakeItem")]
-    [Alias("takeitem")]
-    [Summary("Takes an item from your active buddy.")]
+    [SlashCommand("tradecord_take_item", "Takes an item from your active buddy.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task TakeItem()
     {
@@ -911,11 +875,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordItemList")]
-    [Alias("itemlist", "il")]
-    [Summary("Shows a list of items and their counts.")]
+    [SlashCommand("tradecord_item_list", "Shows a list of items and their counts.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task ItemList([Remainder][Summary("Item name or search filter")] string input)
+    public async Task ItemList([Remainder][global::Discord.Interactions.Summary("Item name or search filter")] string input)
     {
         string name = $"{Context.User.Username}'s Item List";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -936,11 +898,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.ListUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDropItem")]
-    [Alias("dropitem", "drop")]
-    [Summary("Drops one or more items.")]
+    [SlashCommand("tradecord_drop_item", "Drops one or more items.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task DropItem([Remainder][Summary("Item name or filter")] string input)
+    public async Task DropItem([Remainder][global::Discord.Interactions.Summary("Item name or filter")] string input)
     {
         string name = $"{Context.User.Username}'s Item Drop";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -963,11 +923,9 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordTimeZone")]
-    [Alias("timezone", "tz")]
-    [Summary("Set UTC time offset for certain time of day events.")]
+    [SlashCommand("tradecord_timezone", "Set UTC time offset for certain time of day events.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
-    public async Task SetTimeZone([Summary("UTC hour offset (negative, zero, or positive)")] string input)
+    public async Task SetTimeZone([global::Discord.Interactions.Summary("UTC hour offset (negative, zero, or positive)")] string input)
     {
         string name = $"{Context.User.Username}'s Time Zone";
         if (!TradeCordParanoiaChecks(out string msg))
@@ -981,9 +939,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordPing")]
-    [Alias("tcping", "tcp")]
-    [Summary("Toggle DM notifications for TradeCord events.")]
+    [SlashCommand("tradecord_ping", "Toggle DM notifications for TradeCord events.")]
     [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
     public async Task ToggleDMPing()
     {
@@ -999,9 +955,7 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
     }
 
-    [Command("TradeCordMuteClear")]
-    [Alias("mc")]
-    [Summary("Remove the mentioned user from the mute list.")]
+    [SlashCommand("tradecord_mute_clear", "Remove the mentioned user from the mute list.")]
     [RequireSudo]
     public async Task TradeCordCommandClear([Remainder] string _)
     {
@@ -1017,10 +971,8 @@ public class TradeCordModule<T> : ModuleBase<SocketCommandContext> where T : PKM
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("TradeCordDeleteUser")]
-    [Alias("du")]
-    [Summary("Delete a user and all their catches via a provided numerical user ID.")]
-    [RequireOwner]
+    [SlashCommand("tradecord_delete_user", "Remove the mentioned user from the mute list.")]
+    [global::Discord.Interactions.RequireOwner]
     public async Task TradeCordDeleteUser(string input)
     {
         if (!ulong.TryParse(input, out ulong id))

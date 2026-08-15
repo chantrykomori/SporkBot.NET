@@ -1,15 +1,15 @@
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using SysBot.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
-public class LogModule : ModuleBase<SocketCommandContext>
+public class LogModule : InteractionModuleBase<SocketInteractionContext>
 {
     private static readonly Dictionary<ulong, ChannelLogger> Channels = [];
 
@@ -24,8 +24,7 @@ public class LogModule : ModuleBase<SocketCommandContext>
         LogUtil.LogInfo("Added logging to Discord channel(s) on Bot startup.", "Discord");
     }
 
-    [Command("logHere")]
-    [Summary("Makes the bot log to the channel.")]
+    [SlashCommand("log_here", "Makes the bot log to the channel.")]
     [RequireSudo]
     public async Task AddLogAsync()
     {
@@ -51,8 +50,7 @@ public class LogModule : ModuleBase<SocketCommandContext>
         Channels.Add(cid, logger);
     }
 
-    [Command("logInfo")]
-    [Summary("Dumps the logging settings.")]
+    [SlashCommand("log_info", "Dumps the logging settings.")]
     [RequireSudo]
     public async Task DumpLogInfoAsync()
     {
@@ -60,8 +58,7 @@ public class LogModule : ModuleBase<SocketCommandContext>
             await ReplyAsync($"{c.Key} - {c.Value}").ConfigureAwait(false);
     }
 
-    [Command("logClear")]
-    [Summary("Clears the logging settings in that specific channel.")]
+    [SlashCommand("log_clear", "Clears the logging settings in that specific channel.")]
     [RequireSudo]
     public async Task ClearLogsAsync()
     {
@@ -77,8 +74,7 @@ public class LogModule : ModuleBase<SocketCommandContext>
         await ReplyAsync($"Logging cleared from channel: {Context.Channel.Name}").ConfigureAwait(false);
     }
 
-    [Command("logClearAll")]
-    [Summary("Clears all the logging settings.")]
+    [SlashCommand("log_clear_all", "Clears all the logging settings.")]
     [RequireSudo]
     public async Task ClearLogsAllAsync()
     {

@@ -1,10 +1,10 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PKHeX.Core;
+using SysBot.Base;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.BasePokeDataOffsetsBS;
 
@@ -53,7 +53,9 @@ public abstract class PokeRoutineExecutor8BS(PokeBotState Config) : PokeRoutineE
         }
 
         pkm.ResetPartyStats();
-        return SwitchConnection.WriteBytesAbsoluteAsync(pkm.EncryptedPartyData, offset, token);
+        byte[] buffer = [];
+        pkm.WriteEncryptedDataParty(buffer);
+        return SwitchConnection.WriteBytesAbsoluteAsync(buffer, offset, token);
     }
 
     public async Task<SAV8BS> IdentifyTrainer(CancellationToken token)

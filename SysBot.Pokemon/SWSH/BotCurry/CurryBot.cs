@@ -1,9 +1,9 @@
-using PKHeX.Core;
 using System;
+using PKHeX.Core;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Base.SwitchStick;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;

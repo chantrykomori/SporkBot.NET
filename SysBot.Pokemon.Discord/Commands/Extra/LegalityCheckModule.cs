@@ -1,33 +1,19 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
 using PKHeX.Core;
-using System.Threading.Tasks;
+using NetUtil = SysBot.Pokemon.Discord.Helpers.NetUtil;
 
 namespace SysBot.Pokemon.Discord;
 
-public class LegalityCheckModule : ModuleBase<SocketCommandContext>
+public class LegalityCheckModule : InteractionModuleBase<SocketInteractionContext>
 {
-    [Command("lc"), Alias("check", "validate", "verify")]
-    [Summary("Verifies the attachment for legality.")]
-    public async Task LegalityCheck()
+    [SlashCommand("verify_legality", "Verifies the attachment for legality.")]
+    public async Task LegalityCheck(
+        [Summary("file", "File to be checked")] IAttachment file,
+        [Summary("verbose", "Whether to return a verbose output (default is false)")] bool verbose = false)
     {
-        var attachments = Context.Message.Attachments;
-        foreach (var att in attachments)
-            await LegalityCheck(att, false).ConfigureAwait(false);
-    }
-
-    [Command("lcv"), Alias("verbose")]
-    [Summary("Verifies the attachment for legality with a verbose output.")]
-    public async Task LegalityCheckVerbose()
-    {
-        var attachments = Context.Message.Attachments;
-        foreach (var att in attachments)
-            await LegalityCheck(att, true).ConfigureAwait(false);
-    }
-
-    private async Task LegalityCheck(IAttachment att, bool verbose)
-    {
-        var download = await NetUtil.DownloadPKMAsync(att).ConfigureAwait(false);
+        var download = await NetUtil.DownloadPKMAsync(file).ConfigureAwait(false);
         if (!download.Success)
         {
             await ReplyAsync(download.ErrorMessage).ConfigureAwait(false);

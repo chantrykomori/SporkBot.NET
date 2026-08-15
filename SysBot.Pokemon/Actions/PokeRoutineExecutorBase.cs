@@ -1,7 +1,7 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System.Threading;
 using System.Threading.Tasks;
+using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon;
 
@@ -40,8 +40,8 @@ public abstract class PokeRoutineExecutorBase(IConsoleBotManaged<IConsoleConnect
     public override void SoftStop() => Config.Pause();
 
     public Task Click(SwitchButton b, int delayMin, int delayMax, CancellationToken token) =>
-        Click(b, Util.Rand.Next(delayMin, delayMax), token);
+        Click(b, PKHeX.Core.Util.Rand.Next(delayMin, delayMax), token);
 
     public Task SetStick(SwitchStick stick, short x, short y, int delayMin, int delayMax, CancellationToken token) =>
-        SetStick(stick, x, y, Util.Rand.Next(delayMin, delayMax), token);
+        SetStick(stick, x, y, PKHeX.Core.Util.Rand.Next(delayMin, delayMax), token);
 }

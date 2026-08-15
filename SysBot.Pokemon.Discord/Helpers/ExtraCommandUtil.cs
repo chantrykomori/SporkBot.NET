@@ -1,12 +1,13 @@
-using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
 using System;
-using System.Linq;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -23,7 +24,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
         public DateTime EntryTime { get; set; }
     }
 
-    public async Task ListUtil(SocketCommandContext ctx, string nameMsg, string entry)
+    public async Task ListUtil(SocketInteractionContext ctx, string nameMsg, string entry)
     {
         List<string> pageContent = ListUtilPrep(entry);
         bool canReact = ctx.Guild.CurrentUser.GetPermissions(ctx.Channel as IGuildChannel).AddReactions;
@@ -47,7 +48,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
             });
         }
 
-        var msg = await ctx.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+        var msg = await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         if (pageContent.Count > 1 && canReact)
         {
             bool exists = ReactMessageDict.TryGetValue(ctx.User.Id, out _);
@@ -97,8 +98,8 @@ public class ExtraCommandUtil<T> where T : PKM, new()
                     continue;
 
                 await channel.SendMessageAsync($"**[TradeCord]** Automatically deleted TradeCord data for: \n**{user.Username}{user.Discriminator}** ({user.Id}) in: **{guild.Name}**.\n Reason: Banned.").ConfigureAwait(false);
-            }    
-            Base.LogUtil.LogInfo($"Automatically deleted TradeCord data for: {user.Username}{user.Discriminator} ({user.Id}) in: {guild.Name}.", "TradeCord: ");
+            }
+            LogUtil.LogInfo($"Automatically deleted TradeCord data for: {user.Username}{user.Discriminator} ({user.Id}) in: {guild.Name}.", "TradeCord: ");
         }
     }
 
@@ -179,7 +180,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
         return Task.CompletedTask;
     }
 
-    public async Task<bool> ReactionVerification(SocketCommandContext ctx)
+    public async Task<bool> ReactionVerification(SocketInteractionContext ctx)
     {
         var sw = new Stopwatch();
         var reaction = new Emoji("👍");
@@ -209,7 +210,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
         return true;
     }
 
-    public async Task<int> EventVoteCalc(SocketCommandContext ctx, List<PokeEventType> events)
+    public async Task<int> EventVoteCalc(SocketInteractionContext ctx, List<PokeEventType> events)
     {
         IEmote[] reactions = [new Emoji("1️⃣"), new Emoji("2️⃣"), new Emoji("3️⃣"), new Emoji("4️⃣"), new Emoji("5️⃣")];
         string text = "The community vote has started! You have 30 seconds to vote for the next event!\n";
@@ -223,7 +224,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
             x.IsInline = false;
         });
 
-        var msg = await ctx.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+        var msg = await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         await msg.AddReactionsAsync(reactions).ConfigureAwait(false);
 
         await Task.Delay(30_000).ConfigureAwait(false);
@@ -245,7 +246,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
         return reactArr.IndexOf(topVote);
     }
 
-    public async Task EmbedUtil(SocketCommandContext ctx, string name, string value, EmbedBuilder? embed = null)
+    public async Task EmbedUtil(SocketInteractionContext ctx, string name, string value, EmbedBuilder? embed = null)
     {
         embed ??= new EmbedBuilder { Color = GetBorderColor(false) };
         var splitName = name.Split(["&^&"], StringSplitOptions.None);
@@ -260,7 +261,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
                 x.IsInline = false;
             });
         }
-        await ctx.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+        await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
     }
 
     public static Task ButtonExecuted(SocketMessageComponent component)
@@ -278,7 +279,7 @@ public class ExtraCommandUtil<T> where T : PKM, new()
                 catch (Exception ex)
                 {
                     var msg = $"{ex.Message}\n{ex.StackTrace}\n{ex.InnerException}";
-                    Base.LogUtil.LogError(msg, "[ButtonExecuted Event]");
+                    LogUtil.LogError(msg, "[ButtonExecuted Event]");
                 }
             }
             else if (id.Contains("permute"))
