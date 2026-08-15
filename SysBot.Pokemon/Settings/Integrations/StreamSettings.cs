@@ -1,10 +1,9 @@
-﻿using PKHeX.Core;
-using SysBot.Base;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon;
 

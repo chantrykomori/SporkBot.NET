@@ -1,13 +1,13 @@
+using System;
 using PKHeX.Core;
 using SysBot.Base;
-using System;
-using System.IO;
 using System.Text;
-using System.Linq;
 using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
@@ -516,7 +516,7 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
                 await DeleteFriend(token).ConfigureAwait(false);
         }
 
-        // If we're deleting friends and need to add friends, it's cleaner to back out 
+        // If we're deleting friends and need to add friends, it's cleaner to back out
         // to Home and re-open the profile in case we ran out of friends to delete.
         if (deleteFriends && addFriends)
         {

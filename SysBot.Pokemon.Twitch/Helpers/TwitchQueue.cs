@@ -1,5 +1,4 @@
 ﻿using PKHeX.Core;
-
 namespace SysBot.Pokemon.Twitch;
 
 public class TwitchQueue<T>(T Entity, PokeTradeTrainerInfo Trainer, string Username, bool Subscriber)

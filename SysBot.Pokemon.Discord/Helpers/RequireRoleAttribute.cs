@@ -1,8 +1,9 @@
-﻿using Discord.Commands;
-using Discord.WebSocket;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -13,7 +14,7 @@ public sealed class RequireRoleAttribute(string RoleName) : PreconditionAttribut
     // Create a constructor so the name can be specified
 
     // Override the CheckPermissions method
-    public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+    public override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo command, IServiceProvider services)
     {
         // Since no async work is done, the result has to be wrapped with `Task.FromResult` to avoid compiler errors
 

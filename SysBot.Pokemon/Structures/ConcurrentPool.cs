@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
-namespace System.Collections.Concurrent;
+namespace SysBot.Pokemon;
 
 /// <summary>
 /// List of data that can be added or removed, not indexed.

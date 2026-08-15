@@ -1,5 +1,3 @@
-using Discord;
-using Discord.Commands;
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -7,20 +5,21 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
 
 namespace SysBot.Pokemon.Discord;
 
 // src: https://github.com/foxbot/patek/blob/master/src/Patek/Modules/InfoModule.cs
 // ISC License (ISC)
 // Copyright 2017, Christopher F. <foxbot@protonmail.com>
-public class InfoModule : ModuleBase<SocketCommandContext>
+public class InfoModule : InteractionModuleBase<SocketInteractionContext>
 {
     private const string detail = "I am an open-source Discord bot powered by PKHeX.Core and other open-source software.";
     private const string repo = "https://github.com/kwsch/SysBot.NET";
     private const string fork = "https://github.com/Koi-3088/ForkBot.NET";
 
-    [Command("info")]
-    [Alias("about", "whoami", "owner")]
+    [SlashCommand("info", "Info about the bot")]
     public async Task InfoAsync()
     {
         var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);

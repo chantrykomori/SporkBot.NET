@@ -1,8 +1,9 @@
-﻿using Discord.Commands;
-using Discord.WebSocket;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -15,7 +16,7 @@ public sealed class RequireQueueRoleAttribute(string RoleName) : PreconditionAtt
 
     // Create a constructor so the name can be specified
 
-    public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
+    public override Task<PreconditionResult> CheckRequirementsAsync(IInteractionContext context, ICommandInfo command, IServiceProvider services)
     {
         var mgr = SysCordSettings.Manager;
         if (mgr.Config.AllowGlobalSudo && mgr.CanUseSudo(context.User.Id))

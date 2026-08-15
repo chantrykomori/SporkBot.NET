@@ -1,16 +1,15 @@
-using Discord;
-using Discord.Commands;
-using PKHeX.Core;
 using System.Text;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
 // ReSharper disable once UnusedType.Global
-public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+public class BotModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("botStatus")]
-    [Summary("Gets the status of the bots.")]
+    [SlashCommand("bot_status", "Gets the status of the bots.")]
     [RequireSudo]
     public async Task GetStatusAsync()
     {
@@ -35,8 +34,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         return $"- {z.Connection.Name} | {z.Connection.Label} - {z.Config.CurrentRoutineType} ~ {z.LastTime:hh:mm:ss} | {z.LastLogged}";
     }
 
-    [Command("botStart")]
-    [Summary("Starts a bot by IP address/port.")]
+    [SlashCommand("bot_start", "Starts a bot by IP address/port.")]
     [RequireSudo]
     public async Task StartBotAsync(string ip)
     {
@@ -51,8 +49,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         await Context.Channel.EchoAndReply($"The bot at {ip} ({bot.Bot.Connection.Label}) has been commanded to Start.").ConfigureAwait(false);
     }
 
-    [Command("botStop")]
-    [Summary("Stops a bot by IP address/port.")]
+    [SlashCommand("bot_stop", "Stops a bot by IP address/port.")]
     [RequireSudo]
     public async Task StopBotAsync(string ip)
     {
@@ -67,9 +64,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         await Context.Channel.EchoAndReply($"The bot at {ip} ({bot.Bot.Connection.Label}) has been commanded to Stop.").ConfigureAwait(false);
     }
 
-    [Command("botIdle")]
-    [Alias("botPause")]
-    [Summary("Commands a bot to Idle by IP address/port.")]
+    [SlashCommand("bot_idle", "Commands a bot to Idle by IP address/port.")]
     [RequireSudo]
     public async Task IdleBotAsync(string ip)
     {
@@ -84,8 +79,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         await Context.Channel.EchoAndReply($"The bot at {ip} ({bot.Bot.Connection.Label}) has been commanded to Idle.").ConfigureAwait(false);
     }
 
-    [Command("botChange")]
-    [Summary("Changes the routine of a bot (trades).")]
+    [SlashCommand("bot_change", "Changes the routine of a bot (trades).")]
     [RequireSudo]
     public async Task ChangeTaskAsync(string ip, [Summary("Routine enum name")] PokeRoutineType task)
     {
@@ -100,8 +94,7 @@ public class BotModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new(
         await Context.Channel.EchoAndReply($"The bot at {ip} ({bot.Bot.Connection.Label}) has been commanded to do {task} as its next task.").ConfigureAwait(false);
     }
 
-    [Command("botRestart")]
-    [Summary("Restarts the bot(s) by IP address(es), separated by commas.")]
+    [SlashCommand("bot_restart", "Restarts the bot(s) by IP address(es), separated by commas.")]
     [RequireSudo]
     public async Task RestartBotAsync(string ipAddressesCommaSeparated)
     {

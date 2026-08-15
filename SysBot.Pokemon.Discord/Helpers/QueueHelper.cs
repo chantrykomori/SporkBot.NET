@@ -1,17 +1,17 @@
+using System.Threading.Tasks;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using Discord.Net;
 using Discord.WebSocket;
 using PKHeX.Core;
-using System.Threading.Tasks;
-
+using SysBot.Base;
 namespace SysBot.Pokemon.Discord;
 
 public static class QueueHelper<T> where T : PKM, new()
 {
     private const uint MaxTradeCode = 9999_9999;
 
-    public static async Task AddToQueueAsync(SocketCommandContext context, int code, string trainer, RequestSignificance sig, T trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader, int catchID = 0)
+    public static async Task AddToQueueAsync(SocketInteractionContext context, int code, string trainer, RequestSignificance sig, T trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader, int catchID = 0)
     {
         if ((uint)code > MaxTradeCode)
         {
@@ -51,12 +51,12 @@ public static class QueueHelper<T> where T : PKM, new()
         }
     }
 
-    public static Task AddToQueueAsync(SocketCommandContext context, int code, string trainer, RequestSignificance sig, T trade, PokeRoutineType routine, PokeTradeType type, int catchID = 0)
+    public static Task AddToQueueAsync(SocketInteractionContext context, int code, string trainer, RequestSignificance sig, T trade, PokeRoutineType routine, PokeTradeType type, int catchID = 0)
     {
         return AddToQueueAsync(context, code, trainer, sig, trade, routine, type, context.User, catchID);
     }
 
-    private static bool AddToTradeQueue(SocketCommandContext context, T pk, int code, string trainerName, RequestSignificance sig, PokeRoutineType type, PokeTradeType t, SocketUser trader, out string msg, int catchID = 0)
+    private static bool AddToTradeQueue(SocketInteractionContext context, T pk, int code, string trainerName, RequestSignificance sig, PokeRoutineType type, PokeTradeType t, SocketUser trader, out string msg, int catchID = 0)
     {
         var user = trader;
         var userID = user.Id;
@@ -88,7 +88,7 @@ public static class QueueHelper<T> where T : PKM, new()
 
         var pokeName = "";
         if ((t == PokeTradeType.Specific || t == PokeTradeType.TradeCord || t == PokeTradeType.SupportTrade || t == PokeTradeType.Giveaway) && pk.Species != 0)
-            pokeName = $" Receiving: {(t == PokeTradeType.SupportTrade && pk.Species != (int)Species.Ditto && pk.HeldItem != 0 ? $"{GameInfo.GetStrings(1).Species[pk.Species]} ({ShowdownParsing.GetShowdownText(pk).Split('@','\n')[1].Trim()})" : $"{GameInfo.GetStrings(1).Species[pk.Species]}")}.";
+            pokeName = $" Receiving: {(t == PokeTradeType.SupportTrade && pk.Species != (int)Species.Ditto && pk.HeldItem != 0 ? $"{GameInfo.GetStrings("eng").Species[pk.Species]} ({ShowdownParsing.GetShowdownText(pk).Split('@','\n')[1].Trim()})" : $"{GameInfo.GetStrings("eng").Species[pk.Species]}")}.";
         msg = $"{user.Mention} - Added to the {type} queue{ticketID}. Current Position: {position.Position}.{pokeName}";
 
         var botct = Info.Hub.Bots.Count;
@@ -100,7 +100,7 @@ public static class QueueHelper<T> where T : PKM, new()
         return true;
     }
 
-    private static async Task HandleDiscordExceptionAsync(SocketCommandContext context, SocketUser trader, HttpException ex)
+    private static async Task HandleDiscordExceptionAsync(SocketInteractionContext context, SocketUser trader, HttpException ex)
     {
         string message = string.Empty;
         switch (ex.DiscordCode)
@@ -113,7 +113,7 @@ public static class QueueHelper<T> where T : PKM, new()
                 {
                     // Nag the owner in logs.
                     message = "You must grant me \"Send Messages\" permissions!";
-                    Base.LogUtil.LogError(message, "QueueHelper");
+                    LogUtil.LogError(message, "QueueHelper");
                     return;
                 }
                 if (!permissions.ManageMessages)

@@ -25,7 +25,7 @@ public record SwitchConnectionConfig : ISwitchConnectionConfig, IWirelessConnect
     public bool IsValid() => Protocol switch
     {
         WiFi => IPAddress.TryParse(IP, out _),
-        USB => Port < ushort.MaxValue,
+        SwitchProtocol.USB => Port < ushort.MaxValue,
         _ => false,
     };
 
@@ -33,7 +33,7 @@ public record SwitchConnectionConfig : ISwitchConnectionConfig, IWirelessConnect
     public bool Matches(string magic) => Protocol switch
     {
         WiFi => IPAddress.TryParse(magic, out var val) && val.ToString() == IP,
-        USB => magic == Port.ToString(),
+        SwitchProtocol.USB => magic == Port.ToString(),
         _ => false,
     };
 
@@ -42,7 +42,7 @@ public record SwitchConnectionConfig : ISwitchConnectionConfig, IWirelessConnect
     public override string ToString() => Protocol switch
     {
         WiFi => IP,
-        USB => Port.ToString(),
+        SwitchProtocol.USB => Port.ToString(),
         _ => throw new ArgumentOutOfRangeException(nameof(SwitchProtocol)),
     };
 
@@ -50,14 +50,14 @@ public record SwitchConnectionConfig : ISwitchConnectionConfig, IWirelessConnect
     public ISwitchConnectionAsync CreateAsynchronous() => Protocol switch
     {
         WiFi => SwitchSocketAsync.CreateInstance(this),
-        USB => new SwitchUSBAsync(Port),
+        SwitchProtocol.USB => new SwitchUSBAsync(Port),
         _ => throw new ArgumentOutOfRangeException(nameof(SwitchProtocol), Protocol, null),
     };
 
     public ISwitchConnectionSync CreateSync() => Protocol switch
     {
         WiFi => new SwitchSocketSync(this),
-        USB => new SwitchUSBSync(Port),
+        SwitchProtocol.USB => new SwitchUSBSync(Port),
         _ => throw new ArgumentOutOfRangeException(nameof(SwitchProtocol), Protocol, null),
     };
 }

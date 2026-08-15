@@ -1,26 +1,23 @@
-using PKHeX.Core;
-using Discord;
-using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Generates and queues various silly trade additions")]
-public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("trade-additions", "Generates and queues various silly trade additions")] public class TradeAdditionsModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
     private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
     private readonly ExtraCommandUtil<T> Util = new();
     private readonly LairBotSettings LairSettings = SysCord<T>.Runner.Hub.Config.LairSWSH;
     private readonly RollingRaidSettings RollingRaidSettings = SysCord<T>.Runner.Hub.Config.RollingRaidSWSH;
 
-    [Command("giveawayqueue")]
-    [Alias("gaq")]
-    [Summary("Prints the users in the giveway queues.")]
+    [SlashCommand("giveaway_queue", "Prints the users in the giveway queues.")]
     [RequireSudo]
     public async Task GetGiveawayListAsync()
     {
@@ -35,9 +32,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("giveawaypool")]
-    [Alias("gap")]
-    [Summary("Show a list of Pokémon available for giveaway.")]
+    [SlashCommand("giveaway_pool", "Show a list of Pokémon available for giveaway.")]
     [RequireQueueRole(nameof(DiscordManager.RolesGiveaway))]
     public async Task DisplayGiveawayPoolCountAsync()
     {
@@ -55,21 +50,17 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         }
     }
 
-    [Command("giveaway")]
-    [Alias("ga", "giveme", "gimme")]
-    [Summary("Makes the bot trade you the specified giveaway Pokémon.")]
+    [SlashCommand("giveaway", "Makes the bot trade you the specified giveaway Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesGiveaway))]
-    public async Task GiveawayAsync([Remainder] string content)
+    public async Task GiveawayAsync(string content)
     {
         var code = Info.GetRandomTradeCode();
         await GiveawayAsync(code, content).ConfigureAwait(false);
     }
 
-    [Command("giveaway")]
-    [Alias("ga", "giveme", "gimme")]
-    [Summary("Makes the bot trade you the specified giveaway Pokémon.")]
+    [SlashCommand("giveaway", "Makes the bot trade you the specified giveaway Pokémon.")]
     [RequireQueueRole(nameof(DiscordManager.RolesGiveaway))]
-    public async Task GiveawayAsync([Summary("Giveaway Code")] int code, [Remainder] string content)
+    public async Task GiveawayAsync([Summary("Giveaway Code")] int code, string content)
     {
         T pk;
         content = ReusableActions.StripCodeBlock(content);
@@ -97,9 +88,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.Specific).ConfigureAwait(false);
     }
 
-    [Command("fixOT")]
-    [Alias("fix", "f")]
-    [Summary("Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
+    [SlashCommand("fix_OT", "Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
     [RequireQueueRole(nameof(DiscordManager.RolesFixOT))]
     public async Task FixAdOT()
     {
@@ -108,9 +97,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.FixOT, PokeTradeType.FixOT).ConfigureAwait(false);
     }
 
-    [Command("fixOT")]
-    [Alias("fix", "f")]
-    [Summary("Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
+    [SlashCommand("fix_OT", "Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
     [RequireQueueRole(nameof(DiscordManager.RolesFixOT))]
     public async Task FixAdOT([Summary("Trade Code")] int code)
     {
@@ -118,9 +105,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.FixOT, PokeTradeType.FixOT).ConfigureAwait(false);
     }
 
-    [Command("fixOTList")]
-    [Alias("fl", "fq")]
-    [Summary("Prints the users in the FixOT queue.")]
+    [SlashCommand("fix_OT_List", "Prints the users in the FixOT queue.")]
     [RequireSudo]
     public async Task GetFixListAsync()
     {
@@ -135,21 +120,11 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
     }
 
-    [Command("itemTrade")]
-    [Alias("it", "item")]
-    [Summary("Makes the bot trade you a Pokémon holding the requested item, or Ditto if stat spread keyword is provided.")]
+    [SlashCommand("itemTrade", "Makes the bot trade you a Pokémon holding the requested item.")]
     [RequireQueueRole(nameof(DiscordManager.RolesSupportTrade))]
-    public async Task ItemTrade([Remainder] string item)
-    {
-        var code = Info.GetRandomTradeCode();
-        await ItemTrade(code, item).ConfigureAwait(false);
-    }
-
-    [Command("itemTrade")]
-    [Alias("it", "item")]
-    [Summary("Makes the bot trade you a Pokémon holding the requested item.")]
-    [RequireQueueRole(nameof(DiscordManager.RolesSupportTrade))]
-    public async Task ItemTrade([Summary("Trade Code")] int code, [Remainder] string item)
+    public async Task ItemTrade(
+        [Summary("Item name")] string item,
+        [Summary("Trade Code")] int code = 0)
     {
         Species species = Info.Hub.Config.Trade.ItemTradeSpecies is Species.None ? Species.Diglett : Info.Hub.Config.Trade.ItemTradeSpecies;
         var set = new ShowdownSet($"{SpeciesName.GetSpeciesNameGeneration((ushort)species, 2, 8)} @ {item.Trim()}");
@@ -166,7 +141,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         var la = new LegalityAnalysis(pkm);
         if (Info.Hub.Config.Trade.Memes && await TrollAsync(Context, pkm is not T || !la.Valid, pkm, true).ConfigureAwait(false))
             return;
-        
+
         if (pkm is not T pk || !la.Valid)
         {
             var reason = result == "Timeout" ? "That set took too long to generate." : "I wasn't able to create something from that.";
@@ -177,12 +152,15 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         pk.ResetPartyStats();
 
         var sig = Context.User.GetFavor();
+        if (code == 0)
+        {
+            var tradeCode = Info.GetRandomTradeCode();
+            await QueueHelper<T>.AddToQueueAsync(Context, tradeCode, Context.User.Username, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.SupportTrade).ConfigureAwait(false);
+        }
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.SupportTrade).ConfigureAwait(false);
     }
 
-    [Command("dittoTrade")]
-    [Alias("dt", "ditto")]
-    [Summary("Makes the bot trade you a Ditto with a requested stat spread and language.")]
+    [SlashCommand("ditto_trade", "Makes the bot trade you a Ditto with a requested stat spread and language.")]
     [RequireQueueRole(nameof(DiscordManager.RolesSupportTrade))]
     public async Task DittoTrade([Summary("A combination of \"ATK/SPA/SPE\" or \"6IV\"")] string keyword, [Summary("Language")] string language, [Summary("Nature")] string nature)
     {
@@ -190,11 +168,13 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await DittoTrade(code, keyword, language, nature).ConfigureAwait(false);
     }
 
-    [Command("dittoTrade")]
-    [Alias("dt", "ditto")]
-    [Summary("Makes the bot trade you a Ditto with a requested stat spread and language.")]
+    [SlashCommand("ditto_trade", "Makes the bot trade you a Ditto with a requested stat spread and language.")]
     [RequireQueueRole(nameof(DiscordManager.RolesSupportTrade))]
-    public async Task DittoTrade([Summary("Trade Code")] int code, [Summary("A combination of \"ATK/SPA/SPE\" or \"6IV\"")] string keyword, [Summary("Language")] string language, [Summary("Nature")] string nature)
+    public async Task DittoTrade(
+        [Summary("Trade Code")] int code,
+        [Summary("A combination of \"ATK/SPA/SPE\" or \"6IV\"")] string keyword,
+        [Summary("Language")] string language,
+        [Summary("Nature")] string nature)
     {
         keyword = keyword.ToLower().Trim();
         if (Enum.TryParse(language, true, out LanguageID lang))
@@ -203,7 +183,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         }
         else
         {
-            await Context.Message.ReplyAsync($"Couldn't recognize language: {language}.").ConfigureAwait(false);
+            await ReplyAsync($"Couldn't recognize language: {language}.").ConfigureAwait(false);
             return;
         }
 
@@ -217,7 +197,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         var la = new LegalityAnalysis(pkm);
         if (Info.Hub.Config.Trade.Memes && await TrollAsync(Context, pkm is not T || !la.Valid, pkm).ConfigureAwait(false))
             return;
-        
+
         if (pkm is not T pk || !la.Valid)
         {
             var reason = result == "Timeout" ? "That set took too long to generate." : "I wasn't able to create something from that.";
@@ -231,8 +211,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.SupportTrade).ConfigureAwait(false);
     }
 
-    [Command("peek")]
-    [Summary("Take and send a screenshot from the specified Switch.")]
+    [SlashCommand("peek", "Take and send a screenshot from the specified Switch.")]
     [RequireOwner]
     public async Task Peek(string address)
     {
@@ -260,9 +239,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await Context.Channel.SendFileAsync(ms, img, "", false, embed : embed.Build());
     }
 
-    [Command("hunt")]
-    [Alias("h")]
-    [Summary("Sets all three Scientist Notes. Enter all three species without spaces or symbols in their names; species separated by spaces.")]
+    [SlashCommand("hunt", "Sets all three Scientist Notes. Enter all three species without spaces or symbols in their names; species separated by spaces.")]
     [RequireSudo]
     public async Task Hunt([Summary("Sets the Lair Pokémon Species in bulk.")] string species1, string species2, string species3)
     {
@@ -286,9 +263,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         }
     }
 
-    [Command("catchlairmons")]
-    [Alias("clm", "catchlair")]
-    [Summary("Toggle to catch lair encounters (Legendary will always be caught).")]
+    [SlashCommand("catch_lair_mons", "Toggle to catch lair encounters (Legendary will always be caught).")]
     [RequireSudo]
     public async Task ToggleCatchLairMons()
     {
@@ -297,9 +272,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("resetlegendflag")]
-    [Alias("rlf", "resetlegend", "legendreset")]
-    [Summary("Toggle the Legendary Caught Flag reset.")]
+    [SlashCommand("reset_legend_flag", "Toggle the Legendary Caught Flag reset.")]
     [RequireSudo]
     public async Task ToggleResetLegendaryCaughtFlag()
     {
@@ -308,9 +281,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("setLairBall")]
-    [Alias("slb", "setBall")]
-    [Summary("Set the ball for catching Lair Pokémon.")]
+    [SlashCommand("set_lair_ball", "Set the ball for catching Lair Pokémon.")]
     [RequireSudo]
     public async Task SetLairBall([Summary("Sets the ball for catching Lair Pokémon.")] string ball)
     {
@@ -326,9 +297,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         await ReplyAsync(msg).ConfigureAwait(false);
     }
 
-    [Command("lairEmbed")]
-    [Alias("le")]
-    [Summary("Initialize posting of Lair shiny result embeds to specified Discord channels.")]
+    [SlashCommand("lair_embed", "Initialize posting of Lair shiny result embeds to specified Discord channels.")]
     [RequireSudo]
     public async Task InitializeEmbeds()
     {
@@ -396,9 +365,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         LairBotUtil.EmbedSource = new();
     }
 
-    [Command("raidEmbed")]
-    [Alias("re")]
-    [Summary("Initialize posting of RollingRaidBot embeds to specified Discord channels.")]
+    [SlashCommand("raid_embed", "Initialize posting of RollingRaidBot embeds to specified Discord channels.")]
     [RequireSudo]
     public async Task InitializeRaidEmbeds()
     {
@@ -486,7 +453,7 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         }
     }
 
-    public static async Task<bool> TrollAsync(SocketCommandContext context, bool invalid, PKM pkm, bool itemTrade = false)
+    public static async Task<bool> TrollAsync(SocketInteractionContext context, bool invalid, PKM pkm, bool itemTrade = false)
     {
         var rng = new Random();
         bool noItem = pkm.HeldItem == 0 && itemTrade;
@@ -494,7 +461,12 @@ public class TradeAdditionsModule<T> : ModuleBase<SocketCommandContext> where T 
         if (Info.Hub.Config.Trade.MemeFileNames == "" || path.Length == 0)
             path = ["https://i.imgur.com/qaCwr09.png"]; //If memes enabled but none provided, use a default one.
 
-        if (invalid || !ItemRestrictions.IsHeldItemAllowed(pkm) || noItem || (pkm.Nickname.Equals("egg", StringComparison.CurrentCultureIgnoreCase) && !Breeding.CanHatchAsEgg(pkm.Species)))
+        if (
+            invalid ||
+            !ItemRestrictions.IsHeldItemAllowed(pkm) ||
+            noItem ||
+            (pkm.Nickname.Equals("egg", StringComparison.CurrentCultureIgnoreCase) &&
+             !Breeding.CanHatchAsEgg(pkm.Species)))
         {
             var msg = $"{(noItem ? $"{context.User.Username}, the item you entered wasn't recognized." : $"Oops! I wasn't able to create that {GameInfo.Strings.Species[pkm.Species]}.")} Here's a meme instead!\n";
             await context.Channel.SendMessageAsync($"{(invalid || noItem ? msg : "")}{path[rng.Next(path.Length)]}").ConfigureAwait(false);

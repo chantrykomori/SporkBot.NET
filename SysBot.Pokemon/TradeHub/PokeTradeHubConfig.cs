@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel;
 
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
-
 namespace SysBot.Pokemon;
 
 public sealed class PokeTradeHubConfig : BaseConfig

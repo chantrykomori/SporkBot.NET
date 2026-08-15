@@ -1,5 +1,5 @@
-﻿using PKHeX.Core;
-using System;
+﻿using System;
+using PKHeX.Core;
 using static SysBot.Pokemon.FossilSpecies;
 
 namespace SysBot.Pokemon;
@@ -42,9 +42,16 @@ public class FossilCount
         return counts;
     }
 
+    // old param order
+    // type, info, maxCount, offset, size
     private static InventoryPouch8 GetTreasurePouch(ReadOnlySpan<byte> itemsBlock)
     {
-        var pouch = new InventoryPouch8(InventoryType.Treasure, ItemStorage8SWSH.Instance, 999, 0, 20);
+        var pouch = new InventoryPouch8(
+            0,
+            20,
+            999,
+            ItemStorage8SWSH.Instance,
+            InventoryType.Treasure);
         pouch.GetPouch(itemsBlock);
         return pouch;
     }

@@ -2,7 +2,7 @@
 using Discord.WebSocket;
 using SysBot.Base;
 
-namespace SysBot.Pokemon.Discord;
+namespace SysBot.Pokemon.Discord.Helpers;
 
 public class ChannelLogger(ulong ChannelID, ISocketMessageChannel Channel) : ILogForwarder
 {

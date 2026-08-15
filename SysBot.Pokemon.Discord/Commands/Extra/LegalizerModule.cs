@@ -1,33 +1,26 @@
-using Discord.Commands;
-using PKHeX.Core;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-public class LegalizerModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+public class LegalizerModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("legalize"), Alias("alm")]
-    [Summary("Tries to legalize the attached pkm data.")]
-    public async Task LegalizeAsync()
+    [SlashCommand("legalize", "Tries to legalize the attached pkm data.")]
+    public async Task LegalizeAsync(
+        [Summary(".pkm Data")]IAttachment file)
     {
-        var attachments = Context.Message.Attachments;
-        foreach (var att in attachments)
-            await Context.Channel.ReplyWithLegalizedSetAsync(att).ConfigureAwait(false);
+        await Context.Channel.ReplyWithLegalizedSetAsync(file).ConfigureAwait(false);
     }
 
-    [Command("convert"), Alias("showdown")]
-    [Summary("Tries to convert the Showdown Set to pkm data.")]
-    [Priority(1)]
-    public Task ConvertShowdown([Summary("Generation/Format")] byte gen, [Remainder][Summary("Showdown Set")] string content)
+    [SlashCommand("convert_showdown", "Tries to convert the Showdown Set to pkm data.")]
+    public Task ConvertShowdown(
+        [Summary("Showdown Set")] string content,
+        [Summary("Generation/Format")] byte gen = 0)
     {
-        return Context.Channel.ReplyWithLegalizedSetAsync(content, gen);
-    }
-
-    [Command("convert"), Alias("showdown")]
-    [Summary("Tries to convert the Showdown Set to pkm data.")]
-    [Priority(0)]
-    public Task ConvertShowdown([Remainder][Summary("Showdown Set")] string content)
-    {
-        return Context.Channel.ReplyWithLegalizedSetAsync<T>(content);
+        return gen != 0
+            ? Context.Channel.ReplyWithLegalizedSetAsync(content, gen)
+            : Context.Channel.ReplyWithLegalizedSetAsync<T>(content);
     }
 }

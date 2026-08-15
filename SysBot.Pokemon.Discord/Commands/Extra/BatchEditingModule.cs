@@ -1,29 +1,25 @@
-﻿using Discord;
-using Discord.Commands;
-using PKHeX.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-// ReSharper disable once UnusedType.Global
-public class BatchEditingModule : ModuleBase<SocketCommandContext>
+public class BatchEditingModule : InteractionModuleBase<SocketInteractionContext>
 {
-    [Command("batchInfo"), Alias("bei")]
-    [Summary("Tries to get info about the requested property.")]
+    [SlashCommand("batchInfo", "Tries to get info about the requested property.")]
     public async Task GetBatchInfo(string propertyName)
     {
-        var result = BatchEditing.GetPropertyType(propertyName);
-        if (string.IsNullOrWhiteSpace(result))
-            await ReplyAsync($"Unable to find info for {propertyName}.").ConfigureAwait(false);
+        if (EntityBatchEditor.Instance.TryGetPropertyType(propertyName, out var result))
+            await ReplyAsync($"{propertyName} : {result}").ConfigureAwait(false);
         else
-            await ReplyAsync($"{propertyName}: {result}").ConfigureAwait(false);
+            await ReplyAsync($"Unable to find info for {propertyName}.").ConfigureAwait(false);
     }
 
-    [Command("batchValidate"), Alias("bev")]
-    [Summary("Tries to get info about the requested property.")]
+    [SlashCommand("batchValidate", "Tries to get info about the requested property.")]
     public async Task ValidateBatchInfo(string instructions)
     {
         bool valid = IsValidInstructionSet(instructions, out var invalid);
@@ -46,8 +42,7 @@ public class BatchEditingModule : ModuleBase<SocketCommandContext>
         var set = new StringInstructionSet(split);
         foreach (var s in set.Filters.Concat(set.Instructions))
         {
-            var type = BatchEditing.GetPropertyType(s.PropertyName);
-            if (type == null)
+            if (!EntityBatchEditor.Instance.TryGetPropertyType(s.PropertyName, out _))
                 invalid.Add(s);
         }
 

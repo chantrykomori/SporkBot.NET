@@ -1,19 +1,17 @@
-﻿using Discord;
-using Discord.Commands;
-using PKHeX.Core;
-using SysBot.Base;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
-public class HubModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+public class HubModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("status")]
-    [Alias("stats")]
-    [Summary("Gets the status of the bot environment.")]
+    [SlashCommand("status", "Gets the status of the bot environment.")]
     public async Task GetStatusAsync()
     {
         var me = SysCord<T>.Runner;

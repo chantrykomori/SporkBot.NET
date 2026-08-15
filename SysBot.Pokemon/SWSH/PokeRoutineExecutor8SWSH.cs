@@ -1,11 +1,11 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Collections.Generic;
+using PKHeX.Core;
+using SysBot.Base;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
@@ -206,7 +206,7 @@ public abstract class PokeRoutineExecutor8SWSH(PokeBotState Config) : PokeRoutin
 
     public Task UnSoftBan(CancellationToken token)
     {
-        // Like previous generations, the game uses a Unix timestamp for 
+        // Like previous generations, the game uses a Unix timestamp for
         // how long we are soft banned and once the soft ban is lifted
         // the game sets the value back to 0 (1970/01/01 12:00 AM (UTC))
         Log("Soft ban detected, unbanning.");

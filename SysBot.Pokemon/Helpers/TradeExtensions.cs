@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Globalization;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 
@@ -95,7 +95,7 @@ public class TradeExtensions<T> where T : PKM, new()
     {
         var dittoStats = new string[] { "atk", "spe", "spa" };
         var nickname = pkm.Nickname.ToLower();
-        pkm.StatNature = pkm.Nature;
+        pkm.StatAlignment = pkm.Nature;
         pkm.MetLocation = pkm switch
         {
             PB8 => 400,
@@ -164,7 +164,7 @@ public class TradeExtensions<T> where T : PKM, new()
         pk.HandlingTrainerName = "";
         pk.HandlingTrainerFriendship = 0;
         pk.ClearMemories();
-        pk.StatNature = pk.Nature;
+        pk.StatAlignment = pk.Nature;
         pk.SetEVs([0, 0, 0, 0, 0, 0]);
 
         pk.SetMarkings();

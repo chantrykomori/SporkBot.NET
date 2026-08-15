@@ -1,9 +1,9 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using PKHeX.Core;
+using SysBot.Base;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Base.SwitchStick;
 
@@ -19,7 +19,7 @@ public abstract class EncounterBotSWSH : PokeRoutineExecutor8SWSH, IEncounterBot
     public ICountSettings Counts => Settings;
     public readonly IReadOnlyList<string> UnwantedMarks;
 
-    protected EncounterBotSWSH(PokeBotState Config, PokeTradeHub<PK8> hub) : base(Config)
+    protected EncounterBotSWSH(PokeBotState config, PokeTradeHub<PK8> hub) : base(config)
     {
         Hub = hub;
         Settings = Hub.Config.EncounterSWSH;

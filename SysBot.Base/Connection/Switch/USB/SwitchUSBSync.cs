@@ -1,5 +1,6 @@
 ﻿using System;
- using static SysBot.Base.SwitchOffsetTypeUtil;
+using SysBot.Base;
+using static SysBot.Base.SwitchOffsetTypeUtil;
 
 namespace SysBot.Base;
 

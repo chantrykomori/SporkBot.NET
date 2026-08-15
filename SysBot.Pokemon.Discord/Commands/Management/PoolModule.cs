@@ -1,16 +1,15 @@
-﻿using Discord;
-using Discord.Commands;
-using PKHeX.Core;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon.Discord;
 
-[Summary("Distribution Pool Module")]
-public class PoolModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+[Group("pool-module","Distribution Pool Module")]
+public class PoolModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("poolReload")]
-    [Summary("Reloads the bot pool from the setting's folder.")]
+    [SlashCommand("pool_reload", "Reloads the bot pool from the setting's folder.")]
     [RequireSudo]
     public async Task ReloadPoolAsync()
     {
@@ -24,8 +23,7 @@ public class PoolModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new
             await ReplyAsync($"Reloaded from folder. Pool count: {hub.Ledy.Pool.Count}").ConfigureAwait(false);
     }
 
-    [Command("pool")]
-    [Summary("Displays the details of Pokémon files in the random pool.")]
+    [SlashCommand("pool", "Displays the details of Pokémon files in the random pool.")]
     public async Task DisplayPoolCountAsync()
     {
         var me = SysCord<T>.Runner;

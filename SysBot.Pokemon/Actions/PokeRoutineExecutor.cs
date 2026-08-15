@@ -1,7 +1,7 @@
-using PKHeX.Core;
-using SysBot.Base;
 using System;
 using System.Collections.Generic;
+using PKHeX.Core;
+using SysBot.Base;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -59,8 +59,10 @@ public abstract class PokeRoutineExecutor<T>(IConsoleBotManaged<IConsoleConnecti
             return;
         var dir = Path.Combine(folder, subfolder);
         Directory.CreateDirectory(dir);
-        var fn = Path.Combine(dir, Util.CleanFileName(pk.FileName));
-        File.WriteAllBytes(fn, pk.DecryptedPartyData);
+        var fn = Path.Combine(dir, PathUtil.CleanFileName(pk.FileName));
+        byte[] buffer = [];
+        pk.WriteDecryptedDataParty(buffer);
+        File.WriteAllBytes(fn, buffer);
         LogUtil.LogInfo($"Saved file: {fn}", "Dump");
     }
 

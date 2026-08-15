@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using SysBot.Base;
 using static Discord.GatewayIntents;
 
 namespace SysBot.Pokemon.Discord;
@@ -237,7 +238,7 @@ public sealed class SysCord<T> where T : PKM, new()
             return true;
         }
 
-        // Execute the command. (result does not indicate a return value, 
+        // Execute the command. (result does not indicate a return value,
         // rather an object stating if the command executed successfully).
         var guild = msg.Channel is SocketGuildChannel g ? g.Guild.Name : "Unknown Guild";
         await Log(new LogMessage(LogSeverity.Info, "Command", $"Executing command from {guild}#{msg.Channel.Name}:@{msg.Author.Username}. Content: {msg}")).ConfigureAwait(false);

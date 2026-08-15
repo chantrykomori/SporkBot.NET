@@ -1,15 +1,15 @@
-﻿using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
-using SysBot.Base;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.WebSocket;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
-public class EchoModule : ModuleBase<SocketCommandContext>
+public class EchoModule : InteractionModuleBase<SocketInteractionContext>
 {
     private class EchoChannel(ulong ChannelId, string ChannelName, Action<string> Action)
     {
@@ -31,8 +31,7 @@ public class EchoModule : ModuleBase<SocketCommandContext>
         EchoUtil.Echo("Added echo notification to Discord channel(s) on Bot startup.");
     }
 
-    [Command("echoHere")]
-    [Summary("Makes the echo special messages to the channel.")]
+    [SlashCommand("echo_here", "Makes the echo special messages to the channel.")]
     [RequireSudo]
     public async Task AddEchoAsync()
     {
@@ -67,8 +66,7 @@ public class EchoModule : ModuleBase<SocketCommandContext>
         return Channels.TryGetValue(cid, out _);
     }
 
-    [Command("echoInfo")]
-    [Summary("Dumps the special message (Echo) settings.")]
+    [SlashCommand("echo_info", "Dumps the special message (Echo) settings.")]
     [RequireSudo]
     public async Task DumpEchoInfoAsync()
     {
@@ -76,8 +74,7 @@ public class EchoModule : ModuleBase<SocketCommandContext>
             await ReplyAsync($"{c.Key} - {c.Value}").ConfigureAwait(false);
     }
 
-    [Command("echoClear")]
-    [Summary("Clears the special message echo settings in that specific channel.")]
+    [SlashCommand("echo_clear", "Clears the special message echo settings in that specific channel.")]
     [RequireSudo]
     public async Task ClearEchosAsync()
     {
@@ -93,8 +90,7 @@ public class EchoModule : ModuleBase<SocketCommandContext>
         await ReplyAsync($"Echoes cleared from channel: {Context.Channel.Name}").ConfigureAwait(false);
     }
 
-    [Command("echoClearAll")]
-    [Summary("Clears all the special message Echo channel settings.")]
+    [SlashCommand("echo_clear_all", "Clears all the special message Echo channel settings.")]
     [RequireSudo]
     public async Task ClearEchosAllAsync()
     {

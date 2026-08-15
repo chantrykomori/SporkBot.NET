@@ -1,10 +1,10 @@
-using PKHeX.Core;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Collections.Generic;
 using Newtonsoft.Json;
+using PKHeX.Core;
 
 namespace SysBot.Pokemon;
 
@@ -274,7 +274,7 @@ public abstract class LairBotUtil
                 _ => 1.0,
             };
 
-            double usefulStatus = 
+            double usefulStatus =
                 (!dmax && ((move.MoveID == (int)Move.Toxic && lairPk.Status_Condition != (int)StatusCondition.Poisoned) || move.MoveID == (int)Move.Counter || move.MoveID == (int)Move.LifeDew ||
                 move.MoveID == (int)Move.WideGuard || (move.MoveID == (int)Move.Yawn && lairPk.Status_Condition != (int)StatusCondition.Asleep)))
                 || (move.MoveID == (int)Move.Protect && dmax) ? 1.2 : 1.0;

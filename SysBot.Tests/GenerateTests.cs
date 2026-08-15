@@ -2,12 +2,13 @@ using FluentAssertions;
 using PKHeX.Core;
 using SysBot.Pokemon;
 using Xunit;
+using LegalitySettings = SysBot.Pokemon.LegalitySettings;
 
 namespace SysBot.Tests;
 
 public class GenerateTests
 {
-    static GenerateTests() => AutoLegalityWrapper.EnsureInitialized(new Pokemon.LegalitySettings());
+    static GenerateTests() => AutoLegalityWrapper.EnsureInitialized(new LegalitySettings());
 
     [Theory]
     [InlineData(Gengar)]
@@ -64,14 +65,14 @@ public class GenerateTests
     }
 
     private const string Gengar =
-        @"Gengar-Gmax @ Life Orb 
-Ability: Cursed Body 
-Shiny: Yes 
-EVs: 252 SpA / 4 SpD / 252 Spe 
-Timid Nature 
-- Dream Eater 
-- Fling 
-- Giga Impact 
+        @"Gengar-Gmax @ Life Orb
+Ability: Cursed Body
+Shiny: Yes
+EVs: 252 SpA / 4 SpD / 252 Spe
+Timid Nature
+- Dream Eater
+- Fling
+- Giga Impact
 - Headbutt";
 
     private const string Braviary =
@@ -85,14 +86,14 @@ Jolly Nature
 - Iron Head";
 
     private const string Drednaw =
-        @"Drednaw-Gmax @ Fossilized Drake 
-Ability: Shell Armor 
-Level: 60 
-EVs: 252 Atk / 4 SpD / 252 Spe 
-Adamant Nature 
-- Earthquake 
-- Liquidation 
-- Swords Dance 
+        @"Drednaw-Gmax @ Fossilized Drake
+Ability: Shell Armor
+Level: 60
+EVs: 252 Atk / 4 SpD / 252 Spe
+Adamant Nature
+- Earthquake
+- Liquidation
+- Swords Dance
 - Head Smash";
 
     private const string Torkoal2 =
@@ -107,15 +108,15 @@ Quiet Nature
 - Fire Blast";
 
     private const string Charizard4 =
-        @"Charizard @ Choice Scarf 
-Ability: Solar Power 
-Level: 50 
-Shiny: Yes 
-EVs: 252 SpA / 4 SpD / 252 Spe 
-Timid Nature 
-- Heat Wave 
-- Air Slash 
-- Solar Beam 
+        @"Charizard @ Choice Scarf
+Ability: Solar Power
+Level: 50
+Shiny: Yes
+EVs: 252 SpA / 4 SpD / 252 Spe
+Timid Nature
+- Heat Wave
+- Air Slash
+- Solar Beam
 - Beat Up";
 
     private const string InvalidSpec =

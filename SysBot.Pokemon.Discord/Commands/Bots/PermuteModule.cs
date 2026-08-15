@@ -1,16 +1,17 @@
-using Discord;
-using Discord.Net;
-using Discord.Commands;
-using PKHeX.Core;
 using System.Threading.Tasks;
+using Discord;
+using Discord.Interactions;
+using Discord.Net;
+using PKHeX.Core;
 
-namespace SysBot.Pokemon.Discord.Commands;
+namespace SysBot.Pokemon.Discord;
 
-public class PermuteModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+// need to fix failure state where the bot can't send a DM
+// right now it uses the old method to post a message in the guild it was invoked in
+// it needs to give a failure message in the new interaction way
+public class PermuteModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
 {
-    [Command("permute")]
-    [Alias("p")]
-    [Summary("Gets shiny path results for the specified filter and provided JSON.")]
+    [SlashCommand("permute", "Gets shiny path results for the specified filter and provided JSON.")]
     [RequireQueueRole(nameof(DiscordManager.RolesEtumrepDump))]
     public async Task PermuteAsync()
     {
@@ -24,10 +25,8 @@ public class PermuteModule<T> : ModuleBase<SocketCommandContext> where T : PKM, 
         }
         catch (HttpException ex)
         {
-            await Context.Message.ReplyAsync($"Could not send a DM: {ex.Message}").ConfigureAwait(false);
+            await Context.Channel.SendMessageAsync($"Could not send a DM: {ex.Message}").ConfigureAwait(false);
         }
 
-        IEmote reaction = new Emoji("✔️");
-        await Context.Message.AddReactionAsync(reaction).ConfigureAwait(false);
     }
 }

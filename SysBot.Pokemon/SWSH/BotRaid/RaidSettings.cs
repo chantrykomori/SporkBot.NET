@@ -1,8 +1,7 @@
-﻿using PKHeX.Core;
-using SysBot.Base;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
+using SysBot.Base;
 
 namespace SysBot.Pokemon;
 
@@ -61,7 +60,7 @@ public class RaidSettings : IBotStateSettings, ICountSettings
     /// <summary>
     /// Gets a random trade code based on the range settings.
     /// </summary>
-    public int GetRandomRaidCode() => Util.Rand.Next(MinRaidCode, MaxRaidCode + 1);
+    public int GetRandomRaidCode() => PKHeX.Core.Util.Rand.Next(MinRaidCode, MaxRaidCode + 1);
 
     private int _completedRaids;
 
