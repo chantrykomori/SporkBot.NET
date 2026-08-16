@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using PKHeX.Core;
 using SysBot.Base;
+using SysBot.Pokemon.Tradecord;
 
 namespace SysBot.Pokemon;
 

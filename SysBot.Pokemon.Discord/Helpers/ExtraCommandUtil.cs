@@ -8,6 +8,7 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using PKHeX.Core;
 using SysBot.Base;
+using SysBot.Pokemon.Tradecord;
 
 namespace SysBot.Pokemon.Discord;
 

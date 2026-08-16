@@ -2,7 +2,6 @@
 using Discord;
 using Discord.Interactions;
 using PKHeX.Core;
-using NetUtil = SysBot.Pokemon.Discord.Helpers.NetUtil;
 
 namespace SysBot.Pokemon.Discord;
 
