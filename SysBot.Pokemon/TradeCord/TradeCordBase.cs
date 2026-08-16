@@ -9,7 +9,7 @@ using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 using static PKHeX.Core.Species;
 
-namespace SysBot.Pokemon;
+namespace SysBot.Pokemon.Tradecord;
 
 public abstract class TradeCordBase<T> where T : PKM, new()
 {
@@ -729,7 +729,7 @@ public abstract class TradeCordBase<T> where T : PKM, new()
             {
                 var pk = group[g];
                 if (FormInfo.IsFusedForm(pk.Species, pk.Form, pk.Format) || FormInfo.IsBattleOnlyForm(pk.Species, pk.Form, pk.Format)
-                    || FormInfo.IsLordForm(pk.Species, pk.Form, pk.Context) || FormInfo.IsUntradable(pk.Species, pk.Form, pk is IFormArgument arg ? arg.FormArgument : 0, pk.Format))
+                    || FormInfo.IsLordForm(pk.Species, pk.Form, pk.Context) || TradeRestrictions.IsUntradable(pk.Species, pk.Form, pk is IFormArgument arg ? arg.FormArgument : 0, pk.Format))
                 {
                     continue;
                 }
@@ -758,8 +758,8 @@ public abstract class TradeCordBase<T> where T : PKM, new()
         if (result != "Regenerated")
             return false;
 
-        var preEvos = EncounterOrigin.GetOriginChain(pkm, (byte)pkm.Context);
-        var encs = EncounterGenerator.GetGenerator(Game).GetPossible(pkm, preEvos, Game, EncounterTypeGroup.Egg).ToArray();
+        var preEvos = EncounterOrigin.GetOriginChain(pkm, pkm.Generation, pkm.Context);
+        var encs = EncounterGenerator.GetGenerator(Game, pkm.Generation).GetPossible(pkm, preEvos, Game, EncounterTypeGroup.Egg).ToArray();
         if (encs.Length is 0 || !Breeding.CanHatchAsEgg(species) || !Breeding.CanHatchAsEgg(species, form, pkm.Context))
             return false;
 
@@ -865,7 +865,10 @@ public abstract class TradeCordBase<T> where T : PKM, new()
             if (write)
             {
                 var names = new string[] { "@data", "@user_id", "@id" };
-                var obj = new object[] { pk.DecryptedPartyData, user_id, catch_id };
+                Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+                pk.WriteDecryptedDataParty(data);
+                var buffer = data.ToArray();
+                var obj = new object[] { buffer, user_id, catch_id };
                 cmds.Add(new() { CommandText = "update binary_catches set data = ? where user_id = ? and id = ?", Names = names, Values = obj });
 
                 names = ["@is_shiny", "@ball", "@nickname", "@form", "@is_egg", "@is_event", "@user_id", "@id"];
@@ -930,7 +933,10 @@ public abstract class TradeCordBase<T> where T : PKM, new()
                 if (la.Valid)
                 {
                     var names = new string[] { "@data", "@user_id", "@id" };
-                    var obj = new object[] { pk.DecryptedPartyData, user_id, catch_id };
+                    Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+                    pk.WriteDecryptedDataParty(data);
+                    var buffer = data.ToArray();
+                    var obj = new object[] { buffer, user_id, catch_id };
                     cmds.Add(new() { CommandText = "update binary_catches set data = ? where user_id = ? and id = ?", Names = names, Values = obj });
 
                     names = ["@nickname", "@user_id", "@id"];
@@ -1059,7 +1065,9 @@ public abstract class TradeCordBase<T> where T : PKM, new()
             {
                 var form = TradeExtensions<PB8>.FormOutput(pk.Species, pk.Form, out _);
                 var names = new string[] { "@data", "@user_id", "@id" };
-                var obj = new object[] { pk.DecryptedPartyData, user_id, catch_id };
+                byte[] buffer = [];
+                pk.WriteDecryptedDataParty(buffer);
+                var obj = new object[] { buffer, user_id, catch_id };
                 cmds.Add(new() { CommandText = "update binary_catches set data = ? where user_id = ? and id = ?", Names = names, Values = obj });
 
                 names = ["@is_shiny", "@ball", "@nickname", "@form", "@is_egg", "@is_event", "@user_id", "@id"];
@@ -1196,7 +1204,7 @@ public abstract class TradeCordBase<T> where T : PKM, new()
                     continue;
 
                 var evoTree = EvolutionTree.GetEvolutionTree(blank.Context);
-                var preEvos = EncounterOrigin.GetOriginChain(blank, (byte)blank.Context);
+                var preEvos = EncounterOrigin.GetOriginChain(blank, blank.Generation, blank.Context);
                 var evos = evoTree.Forward.GetEvolutions(blank.Species, blank.Form).ToArray();
 
                 if (preEvos.Length >= 2 && evos.Length is 0)

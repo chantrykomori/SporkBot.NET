@@ -53,9 +53,10 @@ public abstract class PokeRoutineExecutor8BS(PokeBotState Config) : PokeRoutineE
         }
 
         pkm.ResetPartyStats();
-        byte[] buffer = [];
-        pkm.WriteEncryptedDataParty(buffer);
-        return SwitchConnection.WriteBytesAbsoluteAsync(buffer, offset, token);
+        Span<byte> data = stackalloc byte[pkm.SIZE_PARTY];
+        pkm.WriteDecryptedDataParty(data);
+        var result = data.ToArray();
+        return SwitchConnection.WriteBytesAbsoluteAsync(result, offset, token);
     }
 
     public async Task<SAV8BS> IdentifyTrainer(CancellationToken token)

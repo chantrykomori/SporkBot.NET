@@ -286,7 +286,12 @@ public sealed class CurryBotSWSH : EncounterBotSWSH
 
     private static InventoryPouch8 GetItemPouch(byte[] data, InventoryType type, int maxCount, int offset, int length)
     {
-        var pouch = new InventoryPouch8(type, ItemStorage8SWSH.Instance, maxCount, offset, length);
+        var pouch = new InventoryPouch8(
+            offset,
+            length,
+            maxCount,
+            ItemStorage8SWSH.Instance,
+            type);
         pouch.GetPouch(data);
         return pouch;
     }

@@ -63,8 +63,8 @@ public class EtumrepUtil
         for (int i = 0; i < pkms.Count; i++)
         {
             var pk = pkms[i];
-            var ms = new MemoryStream(pk.Data);
-            var name = Util.CleanFileName(pk.FileName);
+            var ms = new MemoryStream([.. pk.Data]);
+            var name = PathUtil.CleanFileName(pk.FileName);
             list.Add(new(ms, name));
         }
 

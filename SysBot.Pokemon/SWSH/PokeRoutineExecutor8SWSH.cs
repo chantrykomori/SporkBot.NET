@@ -52,7 +52,10 @@ public abstract class PokeRoutineExecutor8SWSH(PokeBotState Config) : PokeRoutin
         }
         var ofs = GetBoxSlotOffset(box, slot);
         pkm.ResetPartyStats();
-        return Connection.WriteBytesAsync(pkm.EncryptedPartyData, ofs, token);
+        Span<byte> data = stackalloc byte[pkm.SIZE_PARTY];
+        pkm.WriteDecryptedDataParty(data);
+        var buffer = data.ToArray();
+        return Connection.WriteBytesAsync(buffer, ofs, token);
     }
 
     public override Task<PK8> ReadBoxPokemon(int box, int slot, CancellationToken token)

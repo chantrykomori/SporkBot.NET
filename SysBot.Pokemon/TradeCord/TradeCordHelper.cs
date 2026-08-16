@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SysBot.Pokemon;
+namespace SysBot.Pokemon.Tradecord;
 
 public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<T>() where T : PKM, new()
 {
@@ -912,7 +912,10 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
             result.SQLCommands.Add(DBCommandConstructor("catches", CatchValues, "", names, obj, SQLTableContext.Insert));
 
             names = BinaryCatchesValues.Replace(" ", "").Split(',');
-            obj = [m_user.UserInfo.UserID, newID, pk.DecryptedPartyData];
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
+            obj = [m_user.UserInfo.UserID, newID, buffer];
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", BinaryCatchesValues, "", names, obj, SQLTableContext.Insert));
             m_user.Catches.Add(newID, new() { Ball = match.Ball, Egg = match.Egg, Form = match.Form, ID = newID, Shiny = match.Shiny, Species = match.Species, Nickname = match.Nickname, Favorite = false, Traded = false, Legendary = isLegend, Event = match.Event, Gmax = match.Gmax });
 
@@ -951,11 +954,14 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
         result.SQLCommands.Add(DBCommandConstructor("trainerinfo", "ot = ?, ot_gender = ?, tid = ?, sid = ?, language = ?", "where user_id = ?", names, obj, SQLTableContext.Update));
 
         var tr = new SimpleTrainerInfo(Game) { TID16 = user.TrainerInfo.TID16, SID16 = user.TrainerInfo.SID16 };
+        // original methods seem to be inaccessible so let's just do the math here
+        uint tid7 = tr.ID32 % 1000000U;
+        uint sid7 = tr.ID32 / 1000000U;
         result.Message = $"\nYour trainer info was set to the following:" +
                          $"\n**OT:** {user.TrainerInfo.OTName}" +
                          $"\n**OTGender:** {user.TrainerInfo.OTGender}" +
-                         $"\n**Display TID:** {tr.GetTrainerTID7()}" +
-                         $"\n**Display SID:** {tr.GetTrainerSID7()}" +
+                         $"\n**Display TID:** {tid7}" +
+                         $"\n**Display SID:** {sid7}" +
                          $"\n**Language:** {user.TrainerInfo.Language}";
         result.Success = true;
         result.User = user;
@@ -969,10 +975,12 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
         var count = sc == default ? 0 : sc.ItemCount;
 
         var tr = new SimpleTrainerInfo(Game) { TID16 = user.TrainerInfo.TID16, SID16 = user.TrainerInfo.SID16 };
+        uint tid7 = tr.ID32 % 1000000U;
+        uint sid7 = tr.ID32 / 1000000U;
         result.Message = $"\n**OT:** {user.TrainerInfo.OTName}" +
                          $"\n**OTGender:** {user.TrainerInfo.OTGender}" +
-                         $"\n**Display TID:** {tr.GetTrainerTID7()}" +
-                         $"\n**Display SID:** {tr.GetTrainerSID7()}" +
+                         $"\n**Display TID:** {tid7}" +
+                         $"\n**Display SID:** {sid7}" +
                          $"\n**Language:** {user.TrainerInfo.Language}" +
                          $"\n**Shiny Charm:** {count}" +
                          $"\n**UTC Time Offset:** {user.UserInfo.TimeZoneOffset}" +
@@ -1319,6 +1327,7 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
     private Results NicknameHandler(TCUser user, string input)
     {
         Results result = new();
+        var filter = WordFilterType.NintendoSwitch;
         bool FuncNickname()
         {
             if (user.Buddy.ID == 0)
@@ -1326,7 +1335,7 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
                 result.Message = "You don't have an active buddy!";
                 return false;
             }
-            else if (WordFilter.IsFiltered(input, out _, GetContext()))
+            else if (WordFilter.IsFiltered((ReadOnlySpan<char>)input,GetContext(),out filter, out _))
             {
                 result.Message = "Nickname triggered the word filter. Please choose a different nickname.";
                 return false;
@@ -1380,7 +1389,10 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
             result.SQLCommands.Add(DBCommandConstructor("catches", "nickname = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
 
             names = ["@data", "@user_id", "@id"];
-            obj = [pk.DecryptedPartyData, user.UserInfo.UserID, match.ID];
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
+            obj = [buffer, user.UserInfo.UserID, match.ID];
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", "data = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
 
             return true;
@@ -1496,7 +1508,10 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
             result.SQLCommands.Add(DBCommandConstructor("buddy", "name = ?, ability = ?", "where user_id = ?", names, obj, SQLTableContext.Update));
 
             names = ["@data", "@user_id", "@id"];
-            obj = [pk.DecryptedPartyData, user.UserInfo.UserID, match.ID];
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
+            obj = [buffer, user.UserInfo.UserID, match.ID];
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", "data = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
 
             result.Message = $"{oldName} evolved into {(pk.IsShiny ? $"**{species + form}**" : species + form)}!";
@@ -1613,8 +1628,11 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
                 result.SQLCommands.Add(DBCommandConstructor("items", "count = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
             }
 
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
             var namesU = new string[] { "@data", "@user_id", "@id" };
-            var objU = new object[] { pk.DecryptedPartyData, user.UserInfo.UserID, match.ID };
+            var objU = new object[] { buffer, user.UserInfo.UserID, match.ID };
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", "data = ?", "where user_id = ? and id = ?", namesU, objU, SQLTableContext.Update));
 
             var itemStr = GetItemString((int)item);
@@ -1762,8 +1780,11 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
                 result.SQLCommands.Add(DBCommandConstructor("buddy", "ability = ?", "where user_id = ?", namesB, objB, SQLTableContext.Update));
             }
 
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
             var names = new string[] { "@data", "@user_id", "@id" };
-            var obj = new object[] { pk.DecryptedPartyData, user.UserInfo.UserID, match.ID };
+            var obj = new object[] { buffer, user.UserInfo.UserID, match.ID };
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", "data = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
             return true;
         }
@@ -2198,7 +2219,10 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
             }
 
             var names = new string[] { "@data", "@user_id", "@id" };
-            var obj = new object[] { pk.DecryptedPartyData, user.UserInfo.UserID, match.ID };
+            Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+            pk.WriteDecryptedDataParty(data);
+            var buffer = data.ToArray();
+            var obj = new object[] { buffer, user.UserInfo.UserID, match.ID };
             result.SQLCommands.Add(DBCommandConstructor("binary_catches", "data = ?", "where user_id = ? and id = ?", names, obj, SQLTableContext.Update));
             result.User = user;
         }
@@ -2266,7 +2290,10 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
         result.SQLCommands.Add(DBCommandConstructor("catches", CatchValues, "", names, obj, SQLTableContext.Insert));
 
         names = BinaryCatchesValues.Replace(" ", "").Split(',');
-        obj = [result.User.UserInfo.UserID, index, pk.DecryptedPartyData];
+        Span<byte> data = stackalloc byte[pk.SIZE_PARTY];
+        pk.WriteDecryptedDataParty(data);
+        var buffer = data.ToArray();
+        obj = [result.User.UserInfo.UserID, index, buffer];
         result.SQLCommands.Add(DBCommandConstructor("binary_catches", BinaryCatchesValues, "", names, obj, SQLTableContext.Insert));
     }
 

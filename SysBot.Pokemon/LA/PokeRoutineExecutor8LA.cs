@@ -53,7 +53,10 @@ public abstract class PokeRoutineExecutor8LA(PokeBotState Config) : PokeRoutineE
         }
 
         pkm.ResetPartyStats();
-        return SwitchConnection.WriteBytesAbsoluteAsync(pkm.EncryptedBoxData, offset, token);
+        Span<byte> data = stackalloc byte[pkm.SIZE_STORED];
+        pkm.WriteEncryptedDataStored(data);
+        var result = data.ToArray();
+        return SwitchConnection.WriteBytesAbsoluteAsync(result, offset, token);
     }
 
     public Task SetCurrentBox(byte box, CancellationToken token)

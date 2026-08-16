@@ -7,9 +7,9 @@ using Discord;
 using Discord.Commands;
 using Discord.Interactions;
 using PKHeX.Core;
-using NetUtil = SysBot.Pokemon.Discord.NetUtil;
+using SysBot.Pokemon.Tradecord;
 
-namespace SysBot.Pokemon.Discord.Commands.Extra;
+namespace SysBot.Pokemon.Discord;
 
 [global::Discord.Interactions.Group("tradecord", "Generates and queues various silly trade additions")]
 public class TradeCordModule<T> : InteractionModuleBase<SocketInteractionContext> where T : PKM, new()
@@ -172,8 +172,9 @@ public class TradeCordModule<T> : InteractionModuleBase<SocketInteractionContext
                 {
                     await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
                     var path = Path.Combine(folder, PathUtil.CleanFileName(result.Poke.FileName));
-                    byte[] buffer = [];
-                    result.Poke.WriteDecryptedDataParty(buffer);
+                    Span<byte> data = stackalloc byte[result.Poke.SIZE_PARTY];
+                    result.Poke.WriteDecryptedDataParty(data);
+                    var buffer = data.ToArray();
                     File.WriteAllBytes(path, buffer);
                     return;
                 }
@@ -186,8 +187,9 @@ public class TradeCordModule<T> : InteractionModuleBase<SocketInteractionContext
                 {
                     await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
                     var path = Path.Combine(folder, PathUtil.CleanFileName(result.EggPoke.FileName));
-                    byte[] buffer = [];
-                    result.Poke.WriteDecryptedDataParty(buffer);
+                    Span<byte> data = stackalloc byte[result.Poke.SIZE_PARTY];
+                    result.Poke.WriteDecryptedDataParty(data);
+                    var buffer = data.ToArray();
                     File.WriteAllBytes(path, buffer);
                     return;
                 }
