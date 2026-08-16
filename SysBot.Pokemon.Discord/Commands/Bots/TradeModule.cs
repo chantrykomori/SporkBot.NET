@@ -6,7 +6,7 @@ using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using PKHeX.Core;
-using NetUtil = SysBot.Pokemon.Discord.NetUtil;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord;
 
