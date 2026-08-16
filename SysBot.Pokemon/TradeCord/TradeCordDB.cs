@@ -4,7 +4,7 @@ using System.Linq;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 
-namespace SysBot.Pokemon;
+namespace SysBot.Pokemon.Tradecord;
 
 public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new()
 {
@@ -29,7 +29,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         if (laInit.Valid && !la.Valid)
             pkm.Nature = nature;
 
-        pkm.StatNature = pkm.Nature;
+        pkm.StatAlignment = pkm.Nature;
         pkm.Move1_PPUps = pkm.Move2_PPUps = pkm.Move3_PPUps = pkm.Move4_PPUps = 0;
         pkm.SetMaximumPPCurrent(pkm.Moves);
         pkm.SetSuggestedHyperTrainingData();
@@ -70,7 +70,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         bool goOther = (pkm.Species is (ushort)Species.Victini or (ushort)Species.Jirachi or (ushort)Species.Celebi or (ushort)Species.Genesect) && enc.Version is GameVersion.GO;
         if (enc is EncounterSlot8GO slotGO && !goMew && !goOther)
         {
-            pkm.SetRandomIVsGO(slotGO.Type.GetMinIV());
+            pkm.SetRandomIVsGO(slotGO.Type.MinimumIV);
         }
         else if (enc is EncounterStatic8N static8N)
         {
@@ -168,7 +168,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         if (enc is not EncounterStatic8b && !pkm.FatefulEncounter)
         {
             pkm.Nature = (Nature)Random.Next(25);
-            pkm.StatNature = pkm.Nature;
+            pkm.StatAlignment = pkm.Nature;
             if (enc is EncounterSlot8b slot8)
                 pkm.SetAbilityIndex(slot8.Ability is AbilityPermission.Any12H && slot8.CanUseRadar && !slot8.IsEgg ? Random.Next(3) : slot8.Ability is AbilityPermission.Any12 ? Random.Next(2) : slot8.Ability is AbilityPermission.OnlyFirst ? 0 : slot8.Ability is AbilityPermission.OnlySecond ? 1 : 2);
             else if (!IsLegendaryOrMythical(pkm.Species))
@@ -253,7 +253,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         pk.SetAbilityIndex(Random.Next(Game is GameVersion.SWSH ? 3 : 2));
 
         pk.Nature = (Nature)Random.Next(25);
-        pk.StatNature = pk.Nature;
+        pk.StatAlignment = pk.Nature;
         pk.SetRandomIVs(Random.Next(2, 7));
         return pk;
     }
@@ -502,8 +502,9 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         pk.Form = result.EvolvedForm;
         pk.SetAbilityIndex(index);
         pk.Nickname = pk.IsNicknamed ? pk.Nickname : pk.ClearNickname();
+        var evoHistory = new EvolutionHistory();
         if (pk.Species is (ushort)Species.Runerigus)
-            pk.SetSuggestedFormArgument((int)Species.Yamask);
+            pk.SetSuggestedFormArgument((ushort)Species.Yamask, 1, pk.Context, new LegalityAnalysis(pk).Info.EvoChainsAllGens);
 
         var la = new LegalityAnalysis(pk);
         if (!la.Valid)
@@ -678,12 +679,12 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
 
     private bool SameEvoTree(PKM pkm1, PKM pkm2)
     {
-        var evos = EncounterOrigin.GetOriginChain(pkm1, pkm1.Generation);
-        var encs = EncounterGenerator.GetGenerator(Game).GetPossible(pkm1, evos, Game, EncounterTypeGroup.Egg).ToArray();
+        var evos = EncounterOrigin.GetOriginChain(pkm1, pkm1.Generation, pkm1.Context);
+        var encs = EncounterGenerator.GetGenerator(Game, pkm1.Generation).GetPossible(pkm1, evos, Game, EncounterTypeGroup.Egg).ToArray();
         var base1 = encs.Length > 0 ? encs[^1].Species : -1;
 
-        evos = EncounterOrigin.GetOriginChain(pkm2, pkm2.Generation);
-        encs = [.. EncounterGenerator.GetGenerator(Game).GetPossible(pkm2, evos, Game, EncounterTypeGroup.Egg)];
+        evos = EncounterOrigin.GetOriginChain(pkm2, pkm2.Generation, pkm2.Context);
+        encs = [.. EncounterGenerator.GetGenerator(Game, pkm2.Generation).GetPossible(pkm2, evos, Game, EncounterTypeGroup.Egg)];
         var base2 = encs.Length > 0 ? encs[^1].Species : -2;
 
         return base1 == base2;
@@ -792,7 +793,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
     private bool IsCottonCandy(ushort species, byte form)
     {
         var color = (PersonalColor)(Game is GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(species, form).Color : PersonalTable.BDSP.GetFormEntry(species, form).Color);
-        var shinyColor = Aesthetics.GetShinyColor(species, form);
+        var shinyColor = Aesthetics.GetShinyColor(species);
         return (shinyColor is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow) &&
             (color is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow);
     }
@@ -861,6 +862,9 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
     public string[] TrainerInfoToStringArray(TCTrainerInfo info, GameVersion game)
     {
         var tr = new SimpleTrainerInfo(game) { TID16 = info.TID16, SID16 = info.SID16 };
-        return [$"OT: {info.OTName}\n", $"OTGender: {info.OTGender}\n", $"TID: {tr.GetTrainerTID7()}\n", $"SID: {tr.GetTrainerSID7()}\n", $"Language: {info.Language}\n"];
+        // original methods seem to be inaccessible
+        uint tid7 = tr.ID32 % 1000000U;
+        uint sid7 = tr.ID32 / 1000000U;
+        return [$"OT: {info.OTName}\n", $"OTGender: {info.OTGender}\n", $"TID: {tid7}\n", $"SID: {sid7}\n", $"Language: {info.Language}\n"];
     }
 }

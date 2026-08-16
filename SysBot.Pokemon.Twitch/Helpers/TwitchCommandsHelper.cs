@@ -38,6 +38,7 @@ public static class TwitchCommandsHelper<T> where T : PKM, new()
         {
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             PKM pkm = sav.GetLegal(template, out var result);
+            var la = new LegalityAnalysis(pkm);
             var nickname = pkm.Nickname.ToLower();
             if (nickname == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
                 TradeExtensions<T>.EggTrade(pkm, template);
@@ -45,7 +46,7 @@ public static class TwitchCommandsHelper<T> where T : PKM, new()
             if (pkm.Species == 132 && (nickname.Contains("atk") || nickname.Contains("spa") || nickname.Contains("spe") || nickname.Contains("6iv")))
                 TradeExtensions<T>.DittoTrade(pkm);
 
-            if (!pkm.CanBeTraded())
+            if (!pkm.CanBeTraded(la.EncounterMatch))
             {
                 msg = $"Skipping trade, @{username}: Provided Pokémon content is blocked from trading!";
                 return false;

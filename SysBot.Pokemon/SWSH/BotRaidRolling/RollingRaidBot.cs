@@ -444,7 +444,8 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
             LobbyPlayers[player].Poke = (PK8?)EntityFormat.GetFromBytes(pkData);
 
             var pk = LobbyPlayers[player].Poke;
-            if (pk is not null && pk.Language != (int)LanguageID.Hacked)
+            // note: Hacked no longer exists in the enum, but an edge case exists where gen 5 japanese ingame trade mons do not have their language set properly
+            if (pk is not null && pk.Language != (int)LanguageID.None)
             {
                 var la = new LegalityAnalysis(pk);
                 var shinySymbol = pk.IsShiny && (pk.ShinyXor is 0 || pk.FatefulEncounter) ? "■" : pk.IsShiny ? "★" : "";

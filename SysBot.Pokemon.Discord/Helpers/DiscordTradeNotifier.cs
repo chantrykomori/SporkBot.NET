@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using SysBot.Pokemon.Tradecord;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -100,8 +101,8 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
         for (int i = 0; i < pkms.Count; i++)
         {
              var pk = pkms[i];
-             var ms = new MemoryStream(pk.Data);
-             var name = Util.CleanFileName(pk.FileName);
+             var ms = new MemoryStream([ .. pk.Data]);
+             var name = PathUtil.CleanFileName(pk.FileName);
              list.Add(new(ms, name));
         }
 

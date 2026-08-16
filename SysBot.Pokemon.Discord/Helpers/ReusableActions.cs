@@ -14,16 +14,22 @@ public static class ReusableActions
 {
     public static async Task SendPKMAsync(this IMessageChannel channel, PKM pkm, string msg = "")
     {
-        var tmp = Path.Combine(Path.GetTempPath(), Util.CleanFileName(pkm.FileName));
-        await File.WriteAllBytesAsync(tmp, pkm.DecryptedPartyData);
+        var tmp = Path.Combine(Path.GetTempPath(), PathUtil.CleanFileName(pkm.FileName));
+        Span<byte> data = stackalloc byte[pkm.SIZE_PARTY];
+        pkm.WriteDecryptedDataParty(data);
+        var result = data.ToArray();
+        await File.WriteAllBytesAsync(tmp, result);
         await channel.SendFileAsync(tmp, msg).ConfigureAwait(false);
         File.Delete(tmp);
     }
 
     public static async Task SendPKMAsync(this IUser user, PKM pkm, string msg = "")
     {
-        var tmp = Path.Combine(Path.GetTempPath(), Util.CleanFileName(pkm.FileName));
-        await File.WriteAllBytesAsync(tmp, pkm.DecryptedPartyData);
+        var tmp = Path.Combine(Path.GetTempPath(), PathUtil.CleanFileName(pkm.FileName));
+        Span<byte> data = stackalloc byte[pkm.SIZE_PARTY];
+        pkm.WriteDecryptedDataParty(data);
+        var result = data.ToArray();
+        await File.WriteAllBytesAsync(tmp, result);
         await user.SendFileAsync(tmp, msg).ConfigureAwait(false);
         File.Delete(tmp);
     }

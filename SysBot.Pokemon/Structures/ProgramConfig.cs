@@ -1,5 +1,5 @@
 ﻿using SysBot.Base;
-using SysBot.Pokemon.TradeHub;
+using SysBot.Pokemon;
 
 namespace SysBot.Pokemon;
 

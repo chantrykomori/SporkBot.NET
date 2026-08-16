@@ -207,7 +207,7 @@ public class TradeExtensions<T> where T : PKM, new()
 
         pk.SetSuggestedHyperTrainingData();
         pk.SetSuggestedBall(enc, true, false, ball);
-        pk.SetFriendship(enc);
+        pk.SetFriendship(enc, pk.PersonalInfo.BaseFriendship);
 
         Span<ushort> relearn = stackalloc ushort[4];
         la.GetSuggestedRelearnMoves(relearn, enc);
